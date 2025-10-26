@@ -50,7 +50,7 @@ class Game {
                 for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
                     // Play a card
                     let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                    let cardIndex = await getUserPlay(currentPlayer, this.pot);
+                    let cardIndex = await getUserPlay(currentPlayer, this.pot, this.leadCard);
                     let card = currentPlayer.hand.splice(cardIndex, 1)[0];
                     this.pot[card] = currentPlayer.name;
 
@@ -65,6 +65,7 @@ class Game {
                 log(LEVELS.DEBUG, `Pot: ${JSON.stringify(this.pot, null, 2)}`);
                 leader = this.findTrickWinner();    // (index of) winning player becomes new leader
                 this.pot = {};
+                this.leadCard = '00';
             }
 
             this.calculateScores();

@@ -45,14 +45,14 @@ export async function getUserBid(player) {
     });
 }
 
-export async function getUserPlay(player, pot) {
+export async function getUserPlay(player, pot, lead) {
     return new Promise((resolve) => {
         const app = document.getElementById("game-container");
         let cardIndex = 0;
 
         const description = document.createElement('p');
         description.innerHTML = `<h3>Playing</h3>${player.name}<br>[${player.hand}]`;
-        description.innerHTML += `<br><br>{${Object.keys(pot)}}`;
+        description.innerHTML += `<br><br>{${Object.keys(pot)}}   Lead: ${lead}`;
 
         const cardLabel = document.createElement("span");
         cardLabel.textContent = player.hand[cardIndex];
@@ -81,10 +81,29 @@ export async function getUserPlay(player, pot) {
         app.appendChild(submitBtn);
 
         submitBtn.onclick = () => {
+            if (!validateCard(player, cardIndex, lead)) {
+                console.log("Cannot play this card, you must follow suit");
+                return;
+            }
             while (app.firstChild) {
                 app.removeChild(app.firstChild);
             }
             resolve(cardIndex);
         };
     });
+}
+
+function validateCard(player, cardIndex, lead) {
+    const card = player.hand[cardIndex];
+    if (lead[1] === card[1]) {
+        return true;
+    }
+
+    // If you have a card of the leading suit you cannot play another suit
+    const notFollowingSuit = player.hand.some(c => c[1] === lead[1]);
+    if (notFollowingSuit) {
+        return false;
+    } else {
+        return true;
+    }
 }
