@@ -1,4 +1,5 @@
 import { Deck, Player } from './objects.js'
+import { getUserBid, getUserPlay } from './ui.js';
 
 const LEVELS = Object.freeze({
     INFO: 0,
@@ -33,7 +34,7 @@ class Game {
         log(LEVELS.DEBUG, `The first dealer is ${this.players[this.dealer]}!`)
     }
 
-    playGame() {
+    async playGame() {
         for (const round of this.num_tricks) {
             let leader = this.dealer + 1;   // leader starts to left of dealer
             this.deck.shuffle();
@@ -42,14 +43,14 @@ class Game {
             })
 
             this.deal(round, leader);
-            this.takeBids(leader);
+            await this.takeBids(leader);
 
             for (let trick = 0; trick < round; trick++) {
                 // Start of trick
                 for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
                     // Play a card
                     let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                    let card = currentPlayer.hand.pop();   // TODO: user input - must be validated
+                    let card = await getUserPlay(currentPlayer, this.pot);
                     this.pot[card] = currentPlayer.name;
 
                     if (playerIndex === 0) {
@@ -60,7 +61,7 @@ class Game {
                     log(LEVELS.AUDIT, `Player ${currentPlayer} played card ${card}`);
                 }
                 // End of trick, find trick winner and clean pot
-                log(LEVELS.DEBUG, JSON.stringify(this.pot, null, 2));
+                log(LEVELS.DEBUG, `Pot: ${JSON.stringify(this.pot, null, 2)}`);
                 leader = this.findTrickWinner();    // (index of) winning player becomes new leader
                 this.pot = {};
             }
@@ -89,11 +90,11 @@ class Game {
         log(LEVELS.DEBUG, `The trump card is ${this.trump}`);
     }
 
-    takeBids(leader) {
+    async takeBids(leader) {
         for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
             let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-            let newBid = Math.floor(Math.random() * 2);    // TODO: user input
-            currentPlayer.bid = newBid;
+            const newBid = await getUserBid(currentPlayer);
+            currentPlayer.bid = Number(newBid);
             log(LEVELS.AUDIT, `Player ${currentPlayer} bid ${newBid}`);
         }
     }
@@ -152,7 +153,7 @@ class Game {
         */
         for (const player of this.players) {
             let score = 3;
-            if (player.bid != player.tricks) {
+            if (player.bid !== player.tricks) {
                 score -= Math.abs(player.bid - player.tricks);
             } else {
                 score += player.bid;
