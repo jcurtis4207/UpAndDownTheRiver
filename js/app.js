@@ -50,7 +50,8 @@ class Game {
                 for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
                     // Play a card
                     let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                    let card = await getUserPlay(currentPlayer, this.pot);
+                    let cardIndex = await getUserPlay(currentPlayer, this.pot);
+                    let card = currentPlayer.hand.splice(cardIndex, 1)[0];
                     this.pot[card] = currentPlayer.name;
 
                     if (playerIndex === 0) {
