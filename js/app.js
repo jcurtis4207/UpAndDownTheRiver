@@ -46,13 +46,13 @@ class Game {
 
             for (let trick = 0; trick < round; trick++) {
                 // Start of trick
-                for (let i = 0; i < this.players.length; i++) {
+                for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
                     // Play a card
-                    let currentPlayer = this.getCurrentPlayer(leader, i);
+                    let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
                     let card = currentPlayer.hand.pop();   // TODO: user input - must be validated
                     this.pot[card] = currentPlayer.name;
 
-                    if (i === 0) {
+                    if (playerIndex === 0) {
                         this.leadCard = card;
                         log(LEVELS.DEBUG, `Lead is ${card}, trump is ${this.trump}`);
                     }
@@ -77,8 +77,8 @@ class Game {
 
     deal(count, leader) {
         for (let card = 0; card < count; card++) {
-            for (let i = 0; i < this.players.length; i++) {
-                let currentPlayer = this.getCurrentPlayer(leader, i);
+            for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
+                let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
                 let newCard = this.deck.deal();
                 currentPlayer.hand.push(newCard);
                 log(LEVELS.AUDIT, `Player ${currentPlayer} got card ${newCard}`);
@@ -90,8 +90,8 @@ class Game {
     }
 
     takeBids(leader) {
-        for (let i = 0; i < this.players.length; i++) {
-            let currentPlayer = this.getCurrentPlayer(leader, i);
+        for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
+            let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
             let newBid = Math.floor(Math.random() * 2);    // TODO: user input
             currentPlayer.bid = newBid;
             log(LEVELS.AUDIT, `Player ${currentPlayer} bid ${newBid}`);
