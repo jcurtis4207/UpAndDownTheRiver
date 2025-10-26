@@ -61,7 +61,7 @@ class Game {
                 }
                 // End of trick, find trick winner and clean pot
                 log(LEVELS.DEBUG, JSON.stringify(this.pot, null, 2));
-                leader = this.findWinner();    // (index of) winning player becomes new leader
+                leader = this.findTrickWinner();    // (index of) winning player becomes new leader
                 this.pot = {};
             }
 
@@ -70,11 +70,9 @@ class Game {
         }
 
         // Game over, find winner
-        this.players.sort((a, b) => a.score - b.score);
-        const winner = this.players.at(-1);
         log(LEVELS.INFO, 'Game Over');
-        log(LEVELS.INFO, `This winner is ${winner} with a score of ${winner.score}`)
         log(LEVELS.DEBUG, JSON.stringify(this.players, null, 2));
+        this.findGameWinner();
     }
 
     deal(count, leader) {
@@ -100,7 +98,7 @@ class Game {
         }
     }
 
-    findWinner() {
+    findTrickWinner() {
         const cards = Object.keys(this.pot);
         const trumpCards = [];
         const onSuitCards = [];
@@ -163,5 +161,15 @@ class Game {
             player.score += score;
             log(LEVELS.AUDIT, `Player ${player} scored ${score}`);
        }
+    }
+
+    findGameWinner() {
+        const maxScore = Math.max(...this.players.map(player => player.score));
+        const winners = this.players.filter(player => player.score === maxScore);
+        if (winners.length === 1) {
+            log(LEVELS.INFO, `This winner is ${winners} with a score of ${winners[0].score}`)
+        } else {
+            log(LEVELS.INFO, `It's a tie! The winners are ${winners} with a score of ${winners[0].score}`)
+        }
     }
 }
