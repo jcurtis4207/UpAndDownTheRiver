@@ -29,6 +29,7 @@ class Game {
         this.pot = {};
         this.trump = '00';
         this.leadCard = '00';
+        this.scoreSheet = [];
         this.players = [new Player("Jacob"), new Player("Thomas"), new Player("Brian")];
         this.dealer = Math.floor(Math.random() * this.players.length);
         log(LEVELS.DEBUG, `The first dealer is ${this.players[this.dealer]}!`)
@@ -74,7 +75,7 @@ class Game {
 
         // Game over, find winner
         log(LEVELS.INFO, 'Game Over');
-        log(LEVELS.DEBUG, JSON.stringify(this.players, null, 2));
+        log(LEVELS.DEBUG, JSON.stringify(this.scoreSheet, null, 2));
         this.findGameWinner();
     }
 
@@ -153,6 +154,7 @@ class Game {
         bid 2, get 2 = 50
         bid 2, get 1 = 20
         */
+        let sheet = [];
         for (const player of this.players) {
             let score = 3;
             if (player.bid !== player.tricks) {
@@ -163,7 +165,9 @@ class Game {
             score *= 10;
             player.score += score;
             log(LEVELS.AUDIT, `Player ${player} scored ${score}`);
+            sheet.push({name: player.name, bid: player.bid, tricks: player.tricks, score: player.score});
        }
+       this.scoreSheet.push(sheet);
     }
 
     findGameWinner() {
