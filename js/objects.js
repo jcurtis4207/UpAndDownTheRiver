@@ -29,6 +29,8 @@ export class Deck {
     }
 }
 
+const suitOrder = { 's': 0, 'c': 1, 'd': 2, 'h': 3 };
+
 export class Player {
     constructor(name) {
         this.name = name;
@@ -42,6 +44,15 @@ export class Player {
         this.hand = [];
         this.bid = 0;
         this.tricks = 0;
+    }
+
+    sortHand() {
+        this.hand = this.hand.slice().sort((a, b) => {
+            const suitA = suitOrder[a[1]];
+            const suitB = suitOrder[b[1]];
+            if (suitA !== suitB) return suitA - suitB;
+            return a[0].charCodeAt(0) - b[0].charCodeAt(0);
+        });
     }
 
     toString() {

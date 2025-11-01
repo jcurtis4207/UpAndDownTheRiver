@@ -55,20 +55,20 @@ export async function getUserPlay(player, lead) {
         description.innerHTML = `<h3>Playing</h3>${player.name}`;
 
         const cardLabel = document.createElement("span");
-        cardLabel.textContent = player.hand[cardIndex];
+        cardLabel.textContent = getCard(player.hand[cardIndex]);
 
         const leftBtn = document.createElement("button");
         leftBtn.textContent = "Left";
         leftBtn.onclick = () => {
             cardIndex = ((cardIndex - 1) % player.hand.length + player.hand.length) % player.hand.length;   // wtf JS?
-            cardLabel.textContent = player.hand[cardIndex];
+            cardLabel.textContent = getCard(player.hand[cardIndex]);
         };
 
         const rightBtn = document.createElement("button");
         rightBtn.textContent = "Right";
         rightBtn.onclick = () => {
             cardIndex = (cardIndex + 1) % player.hand.length;
-            cardLabel.textContent = player.hand[cardIndex];
+            cardLabel.textContent = getCard(player.hand[cardIndex]);
         };
 
         const submitBtn = document.createElement("button");
@@ -120,7 +120,7 @@ export function updateAllPlayers(players) {
         Score: ${player.score}<br>
         Bid: ${player.bid}<br>
         Tricks: ${player.tricks}<br>
-        [${player.hand}]`;
+        [${getHand(player)}]`;
         container.appendChild(block);
     });
 
@@ -130,8 +130,8 @@ export function updateAllPlayers(players) {
 export function updateActiveSuits(trump, lead) {
     const container = document.querySelector(".active-suits");
     container.innerHTML = `
-    Trump: ${trump}<br>
-    Lead: ${lead === '00' ? '' : lead}`;
+    Trump: ${getCard(trump)}<br>
+    Lead: ${lead === '00' ? '' : getCard(lead)}`;
 }
 
 export function updateActivePlayers(dealer, currentPlayer) {
@@ -145,7 +145,7 @@ export function updatePot(pot) {
     const container = document.querySelector(".pot");
     let html = '';
     for (const key in pot) {
-        html += `${key}: ${pot[key]}<br>`
+        html += `${getCard(key)}: ${pot[key]}<br>`
     }
     container.innerHTML = html;
 }
@@ -153,7 +153,7 @@ export function updatePot(pot) {
 function updateInventory(player) {
     const container = document.querySelector(".inventory");
     container.innerHTML = `
-    ${player.hand}&nbsp&nbsp&nbsp;
+    ${getHand(player)}&nbsp&nbsp&nbsp;
     Score: ${player.score}&nbsp&nbsp&nbsp;
     Bids: ${player.bid}&nbsp&nbsp&nbsp;
     Tricks: ${player.tricks}&nbsp&nbsp&nbsp;`;
@@ -175,4 +175,32 @@ export function showWinner(winners) {
     } else {
         container.innerHTML += `TIE! The winners are ${winners} with a score of ${winners[0].score}`;
     }
+}
+
+function getCard(card) {
+    const valueMap = {
+        'A': '10',
+        'B': 'J',
+        'C': 'Q',
+        'D': 'K',
+        'E': 'A'
+    };
+    const suitMap = {
+        's': '♠',
+        'h': '♥',
+        'd': '♦',
+        'c': '♣'
+    };
+
+    const value = valueMap[card[0]] || card[0];
+    const suit = suitMap[card[1]];
+    return `${value}${suit}`;
+}
+
+function getHand(player) {
+    let hand = [];
+    for (const c of player.hand) {
+        hand.push(getCard(c));
+    }
+    return hand;
 }

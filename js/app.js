@@ -99,6 +99,10 @@ class Game {
             }
         }
 
+        for (const player of this.players) {
+            player.sortHand();
+        }
+
         this.trump = this.deck.deal();
         log(LEVELS.DEBUG, `The trump card is ${this.trump}`);
     }
