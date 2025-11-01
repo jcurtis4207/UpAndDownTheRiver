@@ -1,5 +1,5 @@
 import { Deck, Player } from './objects.js'
-import { getUserBid, getUserPlay } from './ui.js';
+import * as ui from './ui.js';
 
 const LEVELS = Object.freeze({
     INFO: 0,
@@ -7,7 +7,7 @@ const LEVELS = Object.freeze({
     AUDIT: 2
 });
 
-const LOGLEVEL = LEVELS.DEBUG;
+const LOGLEVEL = LEVELS.INFO;
 
 document.addEventListener('DOMContentLoaded', function() {
     const game = new Game();
@@ -32,7 +32,7 @@ class Game {
         this.scoreSheet = [];
         this.players = [new Player("Jacob"), new Player("Thomas"), new Player("Brian")];
         this.dealer = Math.floor(Math.random() * this.players.length);
-        log(LEVELS.DEBUG, `The first dealer is ${this.players[this.dealer]}!`)
+        log(LEVELS.DEBUG, `The first dealer is ${this.players[this.dealer]}!`);
     }
 
     async playGame() {
@@ -44,6 +44,8 @@ class Game {
             })
 
             this.deal(round, leader);
+            ui.updateAllPlayers(this.players);
+            ui.updateActiveSuits(this.trump, this.leadCard);
             await this.takeBids(leader);
 
             for (let trick = 0; trick < round; trick++) {
@@ -51,12 +53,15 @@ class Game {
                 for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
                     // Play a card
                     let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                    let cardIndex = await getUserPlay(currentPlayer, this.pot, this.leadCard);
+                    ui.updateActivePlayers(this.getDealerName(), currentPlayer);
+                    let cardIndex = await ui.getUserPlay(currentPlayer, this.leadCard);
                     let card = currentPlayer.hand.splice(cardIndex, 1)[0];
                     this.pot[card] = currentPlayer.name;
+                    ui.updatePot(this.pot);
 
                     if (playerIndex === 0) {
                         this.leadCard = card;
+                        ui.updateActiveSuits(this.trump, this.leadCard);
                         log(LEVELS.DEBUG, `Lead is ${card}, trump is ${this.trump}`);
                     }
 
@@ -65,18 +70,23 @@ class Game {
                 // End of trick, find trick winner and clean pot
                 log(LEVELS.DEBUG, `Pot: ${JSON.stringify(this.pot, null, 2)}`);
                 leader = this.findTrickWinner();    // (index of) winning player becomes new leader
+                ui.updateMessage(this.players[leader]);
                 this.pot = {};
                 this.leadCard = '00';
+                ui.updateAllPlayers(this.players);
+                ui.updatePot(this.pot);
             }
 
             this.calculateScores();
+            ui.updateAllPlayers(this.players);
             this.dealer++;
         }
 
         // Game over, find winner
         log(LEVELS.INFO, 'Game Over');
         log(LEVELS.DEBUG, JSON.stringify(this.scoreSheet, null, 2));
-        this.findGameWinner();
+        const winners = this.findGameWinner();
+        ui.showWinner(winners);
     }
 
     deal(count, leader) {
@@ -96,9 +106,11 @@ class Game {
     async takeBids(leader) {
         for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
             let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-            const newBid = await getUserBid(currentPlayer);
+            ui.updateActivePlayers(this.getDealerName(), currentPlayer);
+            const newBid = await ui.getUserBid(currentPlayer);
             currentPlayer.bid = Number(newBid);
             log(LEVELS.AUDIT, `Player ${currentPlayer} bid ${newBid}`);
+            ui.updateAllPlayers(this.players);
         }
     }
 
@@ -178,5 +190,10 @@ class Game {
         } else {
             log(LEVELS.INFO, `It's a tie! The winners are ${winners} with a score of ${winners[0].score}`)
         }
+        return winners;
+    }
+
+    getDealerName() {
+        return this.players[this.dealer].name;
     }
 }

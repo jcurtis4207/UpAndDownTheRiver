@@ -1,10 +1,10 @@
 export async function getUserBid(player) {
     return new Promise((resolve) => {
-        const app = document.getElementById("game-container");
+        const app = document.querySelector(".input");
         let value = 0;
 
         const description = document.createElement('p');
-        description.innerHTML = `<h3>Bidding</h3>${player.name}<br>[${player.hand}]`;
+        description.innerHTML = `<h3>Bidding</h3>${player.name}`;
 
         const bidLabel = document.createElement("span");
         bidLabel.textContent = value;
@@ -34,6 +34,7 @@ export async function getUserBid(player) {
         app.appendChild(downBtn);
         app.appendChild(bidLabel);
         app.appendChild(upBtn);
+        app.appendChild(document.createElement("p"));
         app.appendChild(submitBtn);
 
         submitBtn.onclick = () => {
@@ -45,14 +46,13 @@ export async function getUserBid(player) {
     });
 }
 
-export async function getUserPlay(player, pot, lead) {
+export async function getUserPlay(player, lead) {
     return new Promise((resolve) => {
-        const app = document.getElementById("game-container");
+        const app = document.querySelector(".input");
         let cardIndex = 0;
 
         const description = document.createElement('p');
-        description.innerHTML = `<h3>Playing</h3>${player.name}<br>[${player.hand}]`;
-        description.innerHTML += `<br><br>{${Object.keys(pot)}}   Lead: ${lead}`;
+        description.innerHTML = `<h3>Playing</h3>${player.name}`;
 
         const cardLabel = document.createElement("span");
         cardLabel.textContent = player.hand[cardIndex];
@@ -78,6 +78,7 @@ export async function getUserPlay(player, pot, lead) {
         app.appendChild(leftBtn);
         app.appendChild(cardLabel);
         app.appendChild(rightBtn);
+        app.appendChild(document.createElement("p"));
         app.appendChild(submitBtn);
 
         submitBtn.onclick = () => {
@@ -105,5 +106,73 @@ function validateCard(player, cardIndex, lead) {
         return false;
     } else {
         return true;
+    }
+}
+
+export function updateAllPlayers(players) {
+    const container = document.querySelector(".all-players");
+    container.innerHTML = '';
+
+    players.forEach(player => {
+        const block = document.createElement('div');
+        block.innerHTML = `
+        <strong>${player.name}</strong><br>
+        Score: ${player.score}<br>
+        Bid: ${player.bid}<br>
+        Tricks: ${player.tricks}<br>
+        [${player.hand}]`;
+        container.appendChild(block);
+    });
+
+    updateInventory(players[0]);    // HACK: current player, not first player
+}
+
+export function updateActiveSuits(trump, lead) {
+    const container = document.querySelector(".active-suits");
+    container.innerHTML = `
+    Trump: ${trump}<br>
+    Lead: ${lead === '00' ? '' : lead}`;
+}
+
+export function updateActivePlayers(dealer, currentPlayer) {
+    const container = document.querySelector(".active-players");
+    container.innerHTML = `
+    Dealer: ${dealer}<br>
+    Current Player: ${currentPlayer}`;
+}
+
+export function updatePot(pot) {
+    const container = document.querySelector(".pot");
+    let html = '';
+    for (const key in pot) {
+        html += `${key}: ${pot[key]}<br>`
+    }
+    container.innerHTML = html;
+}
+
+function updateInventory(player) {
+    const container = document.querySelector(".inventory");
+    container.innerHTML = `
+    ${player.hand}&nbsp&nbsp&nbsp;
+    Score: ${player.score}&nbsp&nbsp&nbsp;
+    Bids: ${player.bid}&nbsp&nbsp&nbsp;
+    Tricks: ${player.tricks}&nbsp&nbsp&nbsp;`;
+}
+
+export function updateMessage(winner) {
+    const container = document.querySelector(".message");
+    container.innerHTML = `${winner.name} won the trick!`;
+    setTimeout(() => {
+        container.innerHTML = '';
+    }, 4000);
+}
+
+export function showWinner(winners) {
+    const container = document.querySelector(".pot");
+    container.innerHTML = 'Game Over.<br>'
+    if (winners.length === 1) {
+        container.innerHTML += `The winner is ${winners} with a score of ${winners[0].score}`;
+    } else {
+        container.innerHTML += `TIE! The winners are ${winners} with a score of ${winners[0].score}`;
     }
 }
