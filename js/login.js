@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 const loginEmailPassword = async () => {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, emailField.value, passwordField.value);
-        console.log(userCredential.user);
         window.location.href = "lobby.html";
     } catch(error) {
         console.log(error);

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Up And Down The River</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+        <link rel="manifest" href="/icons/site.webmanifest">
+        <link rel="preload" href="/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/styles.css"></noscript>
+    </head>
+    <body>
+        <h1>Error</h1>
+        <div id="message"></div>
+        <script>
+            const urlParams = new URLSearchParams(window.location.search);
+            const message = urlParams.get('message');
+            if (message) {
+                if (decodeURIComponent(message) === 'started') {
+                    document.getElementById('message').textContent = 'The game has already started';
+                } else if (decodeURIComponent(message) === 'full') {
+                    document.getElementById('message').textContent = 'The lobby is full';
+                }
+            }
+        </script>
+    </body>
+</html>
