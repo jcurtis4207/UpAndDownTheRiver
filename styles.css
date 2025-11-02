@@ -8,6 +8,10 @@ html, body {
     justify-content: center;
 }
 
+#loginErrorLabel{
+    color: red;
+}
+
 .all-players {
     position: absolute;
     top: 20px;
