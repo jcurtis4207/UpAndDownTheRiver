@@ -6,11 +6,6 @@ const emailField = document.getElementById("txtEmail");
 const passwordField = document.getElementById("txtPassword");
 const errorLabel = document.getElementById("loginErrorLabel");
 
-document.addEventListener('DOMContentLoaded', async function() {
-    /* When the page loads, enable login listener */
-    btnLogin.addEventListener("click", loginEmailPassword);
-});
-
 const loginEmailPassword = async () => {
     /* On successful login redirect to lobby */
     try {
@@ -33,4 +28,16 @@ function showLoginError(error) {
     else {
         errorLabel.innerHTML = `Error: ${error.message}`
     }
+}
+
+/* Loading the config file may delay past the DOMContentLoad trigger
+   If the page is done loading, this is the case, and we should start the button listener manually. */
+function setupLoginPage() {
+  btnLogin.addEventListener("click", loginEmailPassword);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupLoginPage, { once: true });
+} else {
+  setupLoginPage();
 }
