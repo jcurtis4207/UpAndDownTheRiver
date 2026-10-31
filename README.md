@@ -41,3 +41,31 @@ Another consideration is what other players bid. This is why being the dealer is
 Lastly I will mention sluffing. This is a very important concept, often overlooked. Sluffing is when you play a card that isn't of the lead or trump suit. When you sluff you can never win with that card. But crucially it can be a chance to remove a card that may win a later trick. For example, on the 7 card round you bid 1 and won the first trick. You must try to avoid winning any more tricks this round. But if you have an ace, and someone leads that suit, there's a good chance it will win. So if you get the opportunity to sluff that ace (in a trick where you can't follow suit) you should take it, to reduce the chances of it winning later in the round.
 
 Conversely if you have bid but have yet to win enough tricks, if you have an situation where you can't follow suit or trump it, you would probably want to play a low card. This leaves your higher cards available if someone happens to lead that suit, giving you a chance to win.
+
+## Game Configuration
+
+The firebase configuration is stored in `firebase-config.json`. It should have the structure:
+
+```json
+{
+    "apiKey": "API_KEY",
+    "authDomain": "up-and-down-the-river-WXYZ.firebaseapp.com",
+    "projectId": "up-and-down-the-river-WXYZ",
+    "storageBucket": "up-and-down-the-river-WXYZ.firebasestorage.app",
+    "messagingSenderId": "MSG_SND_ID",
+    "appId": "1:ABC:web:XYZ"
+}
+```
+
+These keys are mandatory to work with the firebase backend.
+
+Optionally the following keys can configure the firebase emulator for development:
+
+```json
+{
+    "runInEumlator": true,
+    "emulatorHost": "192.168.1.202"
+}
+```
+
+When `runInEumlator` is `true` and `emulatorHost` is defined, the Auth and Database emulators will use the specified host for the emulator endpoints.
