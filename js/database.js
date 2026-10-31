@@ -3,37 +3,8 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/fi
 import { ref, set, get, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
 const gameRef = ref(db, 'game');
-const deckRef = ref(db, 'deck');
 const allPlayersRef = ref(db, 'players');
 const suitOrder = { 's': 0, 'c': 1, 'd': 2, 'h': 3 };
-
-/* Deck */
-export async function shuffle() {
-    /* Initialize a shuffled deck in the database */
-    const suits = ['s', 'h', 'd', 'c'];
-    //                                                      10   J    Q    K    A
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E'];
-    const deck = [];
-    for (const suit of suits) {
-        for (const rank of ranks) {
-            deck.push(`${rank}${suit}`);
-        }
-    }
-
-    // shuffle
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-
-    await set(deckRef, deck);
-}
-
-export async function getCardsFromDeck() {
-    /* Retrieves the deck as a list */
-    const deck = await get(deckRef);
-    return Array.from(deck.val());
-}
 
 /* Player */
 export function getPlayerRef(userId) {

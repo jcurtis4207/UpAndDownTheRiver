@@ -19,9 +19,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+function shuffle() {
+    /* Returns a shuffled deck of cards as a list */
+    const suits = ['s', 'h', 'd', 'c'];
+    //                                                      10   J    Q    K    A
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E'];
+    const deck = [];
+    for (const suit of suits) {
+        for (const rank of ranks) {
+            deck.push(`${rank}${suit}`);
+        }
+    }
+
+    // shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    return deck;
+}
+
 async function deal(count, leader) {
     /* Deals the number of cards to each player and deal one more for the trump card */
-    const deck = await db.getCardsFromDeck();
+    const deck = shuffle();
     for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
         let hand = [];
         for (let cardIndex = 0; cardIndex < count; cardIndex++) {
