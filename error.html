@@ -22,6 +22,10 @@
                     document.getElementById('message').textContent = 'The game has already started';
                 } else if (decodeURIComponent(message) === 'full') {
                     document.getElementById('message').textContent = 'The lobby is full';
+                } else if (decodeURIComponent(message) === 'not_started') {
+                    document.getElementById('message').textContent = 'The game is not started';
+                } else if (decodeURIComponent(message) === 'no_user') {
+                    document.getElementById('message').textContent = 'No user ID found';
                 }
             }
         </script>

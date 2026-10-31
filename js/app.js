@@ -1,203 +1,260 @@
-import { Deck, Player } from './objects.js'
+import * as db from './database.js';
 import * as ui from './ui.js';
+import { onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-const LEVELS = Object.freeze({
-    INFO: 0,
-    DEBUG: 1,
-    AUDIT: 2
-});
 
-const LOGLEVEL = LEVELS.INFO;
+let allPlayers = []
 
-document.addEventListener('DOMContentLoaded', function() {
-    const game = new Game();
-    game.playGame();
-});
+document.addEventListener('DOMContentLoaded', async function() {
+    /* When the page loads, verify the game state and start play based on who is host */
+    const game = await db.ensureGameStarted();
+    const userId = await db.ensureUserInGame();
 
-function log(level, message) {
-    if (level <= LOGLEVEL) {
-        let lvlStr = Object.entries(LEVELS).find(([_, val]) => val === level)?.[0];
-        lvlStr = lvlStr.padEnd(8, ' ');
-        console.log(`${lvlStr} ${message}`)
+    if (game.host == userId) {
+        allPlayers = await db.getAllPlayerIds();
+        await db.setupNewGame();
+        await playActive(userId);
+    } else {
+        await playPassive(userId);
     }
+});
+
+async function deal(count, leader) {
+    /* Deals the number of cards to each player and deal one more for the trump card */
+    const deck = await db.getCardsFromDeck();
+    for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
+        let hand = [];
+        for (let cardIndex = 0; cardIndex < count; cardIndex++) {
+            hand.push(deck.pop());
+        }
+        await db.setHand(getPlayerId(leader, playerIndex), hand);
+    }
+    await db.setTrump(deck.pop());
 }
 
-class Game {
-    constructor() {
-        this.num_tricks = [7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7];
-        this.deck = new Deck();
-        this.pot = {};
-        this.trump = '00';
-        this.leadCard = '00';
-        this.scoreSheet = [];
-        this.players = [new Player("Jacob"), new Player("Thomas"), new Player("Brian")];
-        this.dealer = Math.floor(Math.random() * this.players.length);
-        log(LEVELS.DEBUG, `The first dealer is ${this.players[this.dealer]}!`);
-    }
+function getPlayerId(leader, index) {
+    /* Returns the Nth player after the leader */
+    return allPlayers[(index + leader) % allPlayers.length];
+}
 
-    async playGame() {
-        for (const round of this.num_tricks) {
-            let leader = this.dealer + 1;   // leader starts to left of dealer
-            this.deck.shuffle();
-            this.players.forEach(player => {
-                player.setup();
-            })
+async function makeBid(userId) {
+    /* Select a bid amount */
+    const newBid = await ui.getUserBid();
+    await db.setPlayerBidding(userId, false);
+    await db.setBid(userId, newBid);
+}
 
-            this.deal(round, leader);
-            ui.updateAllPlayers(this.players);
-            ui.updateActiveSuits(this.trump, this.leadCard);
-            await this.takeBids(leader);
+async function waitForPlayerToBid(userId) {
+    /* Waits for the given player to make a bid */
+    const playerRef = db.getPlayerRef(userId);
 
-            for (let trick = 0; trick < round; trick++) {
-                // Start of trick
-                for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
-                    // Play a card
-                    let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                    ui.updateActivePlayers(this.getDealerName(), currentPlayer);
-                    let cardIndex = await ui.getUserPlay(currentPlayer, this.leadCard);
-                    let card = currentPlayer.hand.splice(cardIndex, 1)[0];
-                    this.pot[card] = currentPlayer.name;
-                    ui.updatePot(this.pot);
-
-                    if (playerIndex === 0) {
-                        this.leadCard = card;
-                        ui.updateActiveSuits(this.trump, this.leadCard);
-                        log(LEVELS.DEBUG, `Lead is ${card}, trump is ${this.trump}`);
-                    }
-
-                    log(LEVELS.AUDIT, `Player ${currentPlayer} played card ${card}`);
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onValue(playerRef, (snapshot) => {
+                if (snapshot.val().bidding === false) {
+                    unsubscribe();
+                    resolve();
                 }
-                // End of trick, find trick winner and clean pot
-                log(LEVELS.DEBUG, `Pot: ${JSON.stringify(this.pot, null, 2)}`);
-                leader = this.findTrickWinner();    // (index of) winning player becomes new leader
-                ui.updateMessage(this.players[leader]);
-                this.pot = {};
-                this.leadCard = '00';
-                ui.updateAllPlayers(this.players);
-                ui.updatePot(this.pot);
+            },
+            (error) => {
+                unsubscribe();
+                reject(error);
             }
+        );
+    });
+}
 
-            this.calculateScores();
-            ui.updateAllPlayers(this.players);
-            this.dealer++;
-        }
+async function takeAllBids(leader, userId) {
+    /* Each player makes a bid */
+    for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
+        const currentPlayer = getPlayerId(leader, playerIndex);
+        await db.setPlayerBidding(currentPlayer, true);
 
-        // Game over, find winner
-        log(LEVELS.INFO, 'Game Over');
-        log(LEVELS.DEBUG, JSON.stringify(this.scoreSheet, null, 2));
-        const winners = this.findGameWinner();
-        ui.showWinner(winners);
-    }
-
-    deal(count, leader) {
-        for (let card = 0; card < count; card++) {
-            for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
-                let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-                let newCard = this.deck.deal();
-                currentPlayer.hand.push(newCard);
-                log(LEVELS.AUDIT, `Player ${currentPlayer} got card ${newCard}`);
-            }
-        }
-
-        for (const player of this.players) {
-            player.sortHand();
-        }
-
-        this.trump = this.deck.deal();
-        log(LEVELS.DEBUG, `The trump card is ${this.trump}`);
-    }
-
-    async takeBids(leader) {
-        for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
-            let currentPlayer = this.getCurrentPlayer(leader, playerIndex);
-            ui.updateActivePlayers(this.getDealerName(), currentPlayer);
-            const newBid = await ui.getUserBid(currentPlayer);
-            currentPlayer.bid = Number(newBid);
-            log(LEVELS.AUDIT, `Player ${currentPlayer} bid ${newBid}`);
-            ui.updateAllPlayers(this.players);
-        }
-    }
-
-    findTrickWinner() {
-        const cards = Object.keys(this.pot);
-        const trumpCards = [];
-        const onSuitCards = [];
-
-        for (let card of cards) {
-            if (card[1] === this.trump[1]) {
-                trumpCards.push(card[0]);
-            } else if (card[1] === this.leadCard[1]) {
-                onSuitCards.push(card[0]);
-            }
-        }
-
-        let winningValue = 0;
-        let winningSuit = 0;
-        let winningName = 0;
-
-        // Get highest value trump card, or card of leading suit if no trumps played
-        if (trumpCards.length === 0) {
-            winningValue = Math.max(...onSuitCards.map(r => parseInt(r, 16)));
-            winningSuit = this.leadCard[1];
+        if (currentPlayer == userId) {
+            await makeBid(currentPlayer);
         } else {
-            winningValue = Math.max(...trumpCards.map(r => parseInt(r, 16)));
-            winningSuit = this.trump[1];
+            await waitForPlayerToBid(currentPlayer);
         }
-
-        winningValue = winningValue.toString(16).toUpperCase();
-        winningName = this.pot[`${winningValue}${winningSuit}`];
-        log(LEVELS.DEBUG, `Player ${winningName} won with card ${winningValue}`);
-
-        // Return index of winning player, they will lead the next trick
-        for (let i = 0; i < this.players.length; i++) {
-            if (this.players[i].name === winningName) {
-                this.players[i].tricks++;
-                return i;
-            }
-        }
-    }
-
-    getCurrentPlayer(leader, index) {
-        // Returns the Nth player after the leader
-        return this.players[(index + leader) % this.players.length];
-    }
-
-    calculateScores() {
-        /*
-        Base score is 30
-        If you win the same amount as you bid, you get an additional 10 for each trick
-        Otherwise you lose 10 points for each trick delta from the original 30
-        bid 2, get 2 = 50
-        bid 2, get 1 = 20
-        */
-        let sheet = [];
-        for (const player of this.players) {
-            let score = 3;
-            if (player.bid !== player.tricks) {
-                score -= Math.abs(player.bid - player.tricks);
-            } else {
-                score += player.bid;
-            }
-            score *= 10;
-            player.score += score;
-            log(LEVELS.AUDIT, `Player ${player} scored ${score}`);
-            sheet.push({name: player.name, bid: player.bid, tricks: player.tricks, score: player.score});
-       }
-       this.scoreSheet.push(sheet);
-    }
-
-    findGameWinner() {
-        const maxScore = Math.max(...this.players.map(player => player.score));
-        const winners = this.players.filter(player => player.score === maxScore);
-        if (winners.length === 1) {
-            log(LEVELS.INFO, `This winner is ${winners} with a score of ${winners[0].score}`)
-        } else {
-            log(LEVELS.INFO, `It's a tie! The winners are ${winners} with a score of ${winners[0].score}`)
-        }
-        return winners;
-    }
-
-    getDealerName() {
-        return this.players[this.dealer].name;
     }
 }
+
+async function playCard(userId) {
+    /* Select a card to play, remove from hand, and add to game pot */
+    const player = await db.getPlayer(userId);
+    const cardIndex = await ui.getUserPlay(player, await db.getGame());
+
+    let hand = player.hand;
+    const card = hand[cardIndex];
+    hand.splice(cardIndex, 1);
+
+    await db.setPlayerPlaying(userId, false);
+    await db.addCardToPot(card, userId);
+    await db.setHand(userId, hand);
+}
+
+async function waitForPlayerToPlay(userId) {
+    /* Wait for the given player to play a card */
+    const playerRef = db.getPlayerRef(userId);
+
+    return new Promise((resolve, reject) => {
+        const unsubscribe = onValue(playerRef, (snapshot) => {
+                if (snapshot.val().playing === false) {
+                    unsubscribe();
+                    resolve();
+                }
+            },
+            (error) => {
+                unsubscribe();
+                reject(error);
+            }
+        );
+    });
+}
+
+async function playTrick(leader, userId) {
+    /* Each player plays a card */
+    for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
+        const currentPlayer = getPlayerId(leader, playerIndex);
+        await db.setPlayerPlaying(currentPlayer, true);
+
+        if (currentPlayer == userId) {
+            await playCard(currentPlayer);
+        } else {
+            await waitForPlayerToPlay(currentPlayer);
+        }
+        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+    }
+}
+
+async function findTrickWinner() {
+    /* Returns the ID of the winning player */
+    const game = await db.getGame();
+    const cards = Object.keys(game.pot);
+    const trumpCards = [];
+    const onSuitCards = [];
+
+    for (let card of cards) {
+        if (card[1] === game.trump[1]) {
+            trumpCards.push(card[0]);
+        } else if (card[1] === game.leadCard[1]) { // [1] is suit
+            onSuitCards.push(card[0]);
+        }
+    }
+
+    let winningValue = 0;
+    let winningSuit = 0;
+
+    // Get highest value trump card, or card of leading suit if no trumps played
+    if (trumpCards.length === 0) {
+        winningValue = Math.max(...onSuitCards.map(r => parseInt(r, 16)));
+        winningSuit = game.leadCard[1];
+    } else {
+        winningValue = Math.max(...trumpCards.map(r => parseInt(r, 16)));
+        winningSuit = game.trump[1];
+    }
+
+    winningValue = winningValue.toString(16).toUpperCase();
+    const winningId = game.pot[`${winningValue}${winningSuit}`];
+    await db.incrementTricks(winningId);
+
+    // Return index of winning player, they will lead the next trick
+    for (let i = 0; i < allPlayers.length; i++) {
+        if (allPlayers[i] === winningId) {
+            return i;
+        }
+    }
+}
+
+async function calculateScores() {
+    /* Sets the score for the round for each player, and adds a row to the game's score sheet
+    Base score is 30
+    If you win the same amount as you bid, you get an additional 10 for each trick
+    Otherwise you lose 10 points for each trick delta from the original 30
+    bid 2, get 2 = 50
+    bid 2, get 1 = 20
+    */
+    let sheet = [];
+    for (const playerId of allPlayers) {
+        const player = await db.getPlayer(playerId);
+        let score = 3;
+        if (player.bid !== player.tricks) {
+            score -= Math.abs(player.bid - player.tricks);
+        } else {
+            score += player.bid;
+        }
+        score *= 10;
+        await db.addNewScore(player.id, score);
+        sheet.push({name: player.name, bid: player.bid, tricks: player.tricks, score: score});
+    }
+    await db.addRowToScoreCard(sheet);
+}
+
+async function findGameWinner() {
+    /* Saves the player(s) with the highest score */
+    const players = Object.values(await db.getAllPlayers());
+    const maxScore = Math.max(...players.map(player => player.score));
+    const winners = players.filter(player => player.score === maxScore);
+    await db.setWinners(winners);
+}
+
+async function playActive(userId) {
+    /* Main game loop for host user */
+    const num_tricks = [7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7];
+
+    for (const round of num_tricks) {
+        await db.shuffle();
+        let leader = await db.getDealer() + 1;   // leader starts to left of dealer
+        await deal(round, leader);
+        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+        await takeAllBids(leader, userId);
+
+        for (let trick = 0; trick < round; trick++) {
+            ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+            await playTrick(leader, userId);
+
+            leader = await findTrickWinner();    // (index of) winning player becomes new leader
+            await db.setTrickWinner(leader);
+            await db.newTrick();
+        }
+        // End of round
+        await calculateScores();
+        await db.incrementDealer();
+    }
+    // End of game
+    await findGameWinner();
+    ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+}
+
+async function playPassive(userId) {
+    /* Main game loop for passive user */
+    const playersRef = db.getPlayerRef(userId);
+    const gameRef = db.getGameRef();
+
+    onValue(gameRef, (snapshot) => {
+        void (async () => {
+            const game = snapshot.val();
+            ui.updateUi(await db.getAllPlayers(), game, userId);
+        })().catch((error) => {
+            console.error("Failed to update UI:", error);
+        });
+    });
+
+    onValue(playersRef, (snapshot) => {
+        void (async () => {
+            const player = snapshot.val();
+            if (player.bidding) {
+                await makeBid(userId);
+            } else if (player.playing) {
+                await playCard(userId);
+            } else {
+                ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+            }
+        })().catch((error) => {
+            console.error("Failed to update user:", error);
+        });
+    });
+}
+
+// HACK
+document.querySelector("#cleanup-button").addEventListener("click", async () => {
+    await db.clearDatabase();
+});

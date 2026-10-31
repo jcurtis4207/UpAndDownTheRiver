@@ -1,10 +1,82 @@
-export async function getUserBid(player) {
+/* TODO
+export function updateActivePlayers(players, game, currentPlayer) {
+    const container = document.querySelector(".active-players");
+    container.innerHTML = `
+    Dealer: ${game.dealer}<br>
+    Current Player: ${currentPlayer}`;
+}
+*/
+
+export function updateUi(players, game, userId) {
+    updateInventory(players[userId]);
+    updateActiveSuits(game);
+    updatePot(game, players);
+    updateAllPlayers(players);
+
+    if (game.leadCard == '00' && game.trickWinner) {
+        updateMessage(`${game.trickWinner} won the trick!`);
+    }
+
+    if (game.winners) {
+        showWinner(game);
+    }
+}
+
+function updateInventory(player) {
+    const container = document.querySelector(".inventory");
+    container.innerHTML = `
+    ${getHand(player)}&nbsp&nbsp&nbsp;
+    Score: ${player.score}&nbsp&nbsp&nbsp;
+    Bids: ${player.bid}&nbsp&nbsp&nbsp;
+    Tricks: ${player.tricks}&nbsp&nbsp&nbsp;`;
+}
+
+function getHand(player) {
+    let hand = [];
+    if (!Array.isArray(player?.hand)) {
+        return hand;
+    }
+    for (const c of player.hand) {
+        hand.push(getCard(c));
+    }
+    return hand;
+}
+
+function updateActiveSuits(game) {
+    const container = document.querySelector(".active-suits");
+    container.innerHTML = `
+    Trump: ${getCard(game.trump)}<br>
+    Lead: ${game.leadCard === '00' ? '' : getCard(game.leadCard)}`;
+}
+
+function getCard(card) {
+    if (card === undefined || card == 0) return;
+    const valueMap = {
+        'A': '10',
+        'B': 'J',
+        'C': 'Q',
+        'D': 'K',
+        'E': 'A'
+    };
+    const suitMap = {
+        's': '♠',
+        'h': '♥',
+        'd': '♦',
+        'c': '♣'
+    };
+
+    const value = valueMap[card[0]] || card[0];
+    const suit = suitMap[card[1]];
+    return `${value}${suit}`;
+}
+
+export async function getUserBid() {
     return new Promise((resolve) => {
         const app = document.querySelector(".input");
         let value = 0;
 
         const description = document.createElement('p');
-        description.innerHTML = `<h3>Bidding</h3>${player.name}`;
+        description.innerHTML = `<h3>Bidding</h3>`;
 
         const bidLabel = document.createElement("span");
         bidLabel.textContent = value;
@@ -46,7 +118,7 @@ export async function getUserBid(player) {
     });
 }
 
-export async function getUserPlay(player, lead) {
+export async function getUserPlay(player, game) {
     return new Promise((resolve) => {
         const app = document.querySelector(".input");
         let cardIndex = 0;
@@ -82,8 +154,9 @@ export async function getUserPlay(player, lead) {
         app.appendChild(submitBtn);
 
         submitBtn.onclick = () => {
-            if (!validateCard(player, cardIndex, lead)) {
+            if (!validateCard(player, cardIndex, game.leadCard)) {
                 console.log("Cannot play this card, you must follow suit");
+                updateMessage("Must follow suit");
                 return;
             }
             while (app.firstChild) {
@@ -109,98 +182,46 @@ function validateCard(player, cardIndex, lead) {
     }
 }
 
-export function updateAllPlayers(players) {
-    const container = document.querySelector(".all-players");
-    container.innerHTML = '';
-
-    players.forEach(player => {
-        const block = document.createElement('div');
-        block.innerHTML = `
-        <strong>${player.name}</strong><br>
-        Score: ${player.score}<br>
-        Bid: ${player.bid}<br>
-        Tricks: ${player.tricks}<br>
-        [${getHand(player)}]`;
-        container.appendChild(block);
-    });
-
-    updateInventory(players[0]);    // HACK: current player, not first player
-}
-
-export function updateActiveSuits(trump, lead) {
-    const container = document.querySelector(".active-suits");
-    container.innerHTML = `
-    Trump: ${getCard(trump)}<br>
-    Lead: ${lead === '00' ? '' : getCard(lead)}`;
-}
-
-export function updateActivePlayers(dealer, currentPlayer) {
-    const container = document.querySelector(".active-players");
-    container.innerHTML = `
-    Dealer: ${dealer}<br>
-    Current Player: ${currentPlayer}`;
-}
-
-export function updatePot(pot) {
-    const container = document.querySelector(".pot");
-    let html = '';
-    for (const key in pot) {
-        html += `${getCard(key)}: ${pot[key]}<br>`
-    }
-    container.innerHTML = html;
-}
-
-function updateInventory(player) {
-    const container = document.querySelector(".inventory");
-    container.innerHTML = `
-    ${getHand(player)}&nbsp&nbsp&nbsp;
-    Score: ${player.score}&nbsp&nbsp&nbsp;
-    Bids: ${player.bid}&nbsp&nbsp&nbsp;
-    Tricks: ${player.tricks}&nbsp&nbsp&nbsp;`;
-}
-
-export function updateMessage(winner) {
+function updateMessage(message) {
     const container = document.querySelector(".message");
-    container.innerHTML = `${winner.name} won the trick!`;
+    container.innerHTML = message;
     setTimeout(() => {
         container.innerHTML = '';
     }, 4000);
 }
 
-export function showWinner(winners) {
+function updatePot(game, players) {
+    const container = document.querySelector(".pot");
+    let html = '';
+    for (const card in game.pot) {
+        const playerName = players[game.pot[card]].name;
+        html += `${getCard(card)}: ${playerName}<br>`
+    }
+    container.innerHTML = html;
+}
+
+function updateAllPlayers(players) {
+    const container = document.querySelector(".all-players");
+    container.innerHTML = '';
+
+    Object.values(players).forEach(player => {
+        const block = document.createElement('div');
+        block.innerHTML = `
+        <strong>${player.name}</strong><br>
+        Score: ${player.score}<br>
+        Bid: ${player.bid}<br>
+        Tricks: ${player.tricks}<br>`;
+        container.appendChild(block);
+    });
+}
+
+function showWinner(game) {
+    const winners = game.winners;
     const container = document.querySelector(".pot");
     container.innerHTML = 'Game Over.<br>'
     if (winners.length === 1) {
-        container.innerHTML += `The winner is ${winners} with a score of ${winners[0].score}`;
+        container.innerHTML += `The winner is ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
     } else {
-        container.innerHTML += `TIE! The winners are ${winners} with a score of ${winners[0].score}`;
+        container.innerHTML += `TIE! The winners are ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
     }
-}
-
-function getCard(card) {
-    const valueMap = {
-        'A': '10',
-        'B': 'J',
-        'C': 'Q',
-        'D': 'K',
-        'E': 'A'
-    };
-    const suitMap = {
-        's': '♠',
-        'h': '♥',
-        'd': '♦',
-        'c': '♣'
-    };
-
-    const value = valueMap[card[0]] || card[0];
-    const suit = suitMap[card[1]];
-    return `${value}${suit}`;
-}
-
-function getHand(player) {
-    let hand = [];
-    for (const c of player.hand) {
-        hand.push(getCard(c));
-    }
-    return hand;
 }
