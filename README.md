@@ -69,3 +69,14 @@ Optionally the following keys can configure the firebase emulator for developmen
 ```
 
 When `runInEmulator` is `true` and `emulatorHost` is defined, the Auth and Database emulators will use the specified host for the emulator endpoints.
+
+## Running In Production
+
+To run the game in firebase, follow these steps:
+
+1. Create a Firebase project.
+2. Create user accounts in the Authentication page.
+3. Enable the Realtime Database for the project.
+4. Host the site (this requires the firebase CLI).
+
+In my environment, I run the firebase CLI on the server where I run the emulators. The `copy-to-dev.sh` script copies the `site` directory to this machine. Then run `deploy-to-prod.sh` to disable emulation in the config and deploy the site to the Firebase Hosting platform.
