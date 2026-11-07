@@ -1,5 +1,5 @@
 import { auth } from './firebase.js'
-import { signInWithEmailAndPassword, AuthErrorCodes, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { signInWithEmailAndPassword, AuthErrorCodes, setPersistence, browserSessionPersistence, updateProfile } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
 const btnLogin = document.getElementById("btnLogin");
 const emailField = document.getElementById("txtEmail");
@@ -11,6 +11,11 @@ const loginEmailPassword = async () => {
     try {
         await setPersistence(auth, browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, emailField.value, passwordField.value);
+        const name = document.getElementById("txtUsername").value.trim();
+
+        await updateProfile(userCredential.user, {
+            displayName: name
+        });
         window.location.href = "lobby.html";
     } catch(error) {
         console.log(error);
