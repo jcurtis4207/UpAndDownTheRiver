@@ -11,11 +11,16 @@ const loginEmailPassword = async () => {
     try {
         await setPersistence(auth, browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, emailField.value, passwordField.value);
-        const name = document.getElementById("txtUsername").value.trim();
 
+        // If username field is empty, set name to email address name
+        let name = document.getElementById("txtUsername").value.trim();
+        if (!name) {
+            name = emailField.value.split("@")[0];
+        }
         await updateProfile(userCredential.user, {
             displayName: name
         });
+
         window.location.href = "lobby.html";
     } catch(error) {
         console.log(error);
