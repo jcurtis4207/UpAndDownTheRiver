@@ -113,6 +113,7 @@ async function takeAllBids(leader, userId) {
     for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
         const currentPlayer = getPlayerId(leader, playerIndex);
         await db.setPlayerBidding(currentPlayer, true);
+        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
 
         if (currentPlayer == userId) {
             await makeBid(currentPlayer);
@@ -160,13 +161,13 @@ async function playTrick(leader, userId) {
     for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
         const currentPlayer = getPlayerId(leader, playerIndex);
         await db.setPlayerPlaying(currentPlayer, true);
+        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
 
         if (currentPlayer == userId) {
             await playCard(currentPlayer);
         } else {
             await waitForPlayerToPlay(currentPlayer);
         }
-        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
     }
 }
 
@@ -253,10 +254,9 @@ async function playActive(userId) {
 
     let roundIndex = 0;
     for (const round of num_tricks) {
-        let leader = await db.getDealer() + 1;   // leader starts to left of dealer
+        let leader = await db.getDealerIndex() + 1;   // leader starts to left of dealer
         await clearHands();
         await deal(round, leader);
-        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
         await takeAllBids(leader, userId);
 
         for (let trick = 0; trick < round; trick++) {
@@ -279,7 +279,7 @@ async function playActive(userId) {
 
 async function playPassive(userId) {
     /* Main game loop for passive user */
-    const playersRef = db.getPlayerRef(userId);
+    const allPlayersRef = db.getAllPlayersRef();
     const gameRef = db.getGameRef();
 
     onValue(gameRef, (snapshot) => {
@@ -291,15 +291,16 @@ async function playPassive(userId) {
         });
     });
 
-    onValue(playersRef, (snapshot) => {
+    onValue(allPlayersRef, (snapshot) => {
         void (async () => {
-            const player = snapshot.val();
+            const allPlayers = snapshot.val();
+            ui.updateUi(allPlayers, await db.getGame(), userId);
+
+            const player = snapshot.val()[userId];
             if (player.bidding) {
                 await makeBid(userId);
             } else if (player.playing) {
                 await playCard(userId);
-            } else {
-                ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
             }
         })().catch((error) => {
             console.error("Failed to update user:", error);

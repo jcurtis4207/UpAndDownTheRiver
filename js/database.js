@@ -7,6 +7,10 @@ const allPlayersRef = ref(db, 'players');
 const suitOrder = { 's': 0, 'c': 1, 'd': 2, 'h': 3 };
 
 /* Player */
+export function getAllPlayersRef() {
+    return allPlayersRef;
+}
+
 export function getPlayerRef(userId) {
     return ref(db, `players/${userId}`);
 }
@@ -188,7 +192,7 @@ export async function setTrump(card) {
     });
 }
 
-export async function getDealer() {
+export async function getDealerIndex() {
     /* Return index of dealer */
     const game = await getGame();
     return game.dealer;

@@ -1,17 +1,9 @@
-/* TODO
-export function updateActivePlayers(players, game, currentPlayer) {
-    const container = document.querySelector(".active-players");
-    container.innerHTML = `
-    Dealer: ${game.dealer}<br>
-    Current Player: ${currentPlayer}`;
-}
-*/
-
 export function updateUi(players, game, userId) {
     updateInventory(players[userId]);
     updateActiveSuits(game);
     updatePot(game, players);
     updateAllPlayers(players);
+    updateActivePlayers(players, game);
 
     if (game.leadCard == '00' && game.trickWinner) {
         updateMessage(`${game.trickWinner} won the trick!`);
@@ -224,4 +216,28 @@ function showWinner(game) {
     } else {
         container.innerHTML += `TIE! The winners are ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
     }
+}
+
+function updateActivePlayers(players, game) {
+    const container = document.querySelector(".active-players");
+
+    const dealerIndex = game.dealer;
+    const playerNames = Object.values(players).map((player) => player.name);
+    const dealer = playerNames[dealerIndex];
+
+    let activePlayer = '';
+    for (const player of Object.values(players)) {
+        if (player.bidding) {
+            activePlayer = `Bidding: ${player.name}`;
+            break;
+        }
+        if (player.playing) {
+            activePlayer = `Playing: ${player.name}`;
+            break;
+        }
+    }
+
+    container.innerHTML = `
+    Dealer: ${dealer}<br>
+    ${activePlayer}`;
 }
