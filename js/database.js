@@ -262,7 +262,6 @@ export async function clearDatabase() {
     /* Clears all databases when game is complete */
     await update(ref(db), {
       game: null,
-      players: null,
-      deck: null,
+      players: null
     });
 }
