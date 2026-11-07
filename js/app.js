@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const userId = await db.ensureUserInGame();
 
     if (game.host == userId) {
+        setupCleanupButton();
         allPlayers = await db.getAllPlayerIds();
         await db.setupNewGame();
         await playActive(userId);
@@ -23,6 +24,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         await playPassive(userId);
     }
 });
+
+function setupCleanupButton() {
+    /* The host will have a visible button to cleanup the database */
+    const cleanupButton = document.getElementById("cleanup-button");
+    cleanupButton.hidden = false;
+
+    cleanupButton.addEventListener("click", async () => {
+        await db.clearDatabase();
+    });
+}
 
 function shuffle() {
     /* Returns a shuffled deck of cards as a list */
@@ -295,8 +306,3 @@ async function playPassive(userId) {
         });
     });
 }
-
-// HACK
-document.querySelector("#cleanup-button").addEventListener("click", async () => {
-    await db.clearDatabase();
-});
