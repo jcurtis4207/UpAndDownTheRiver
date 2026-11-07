@@ -42,10 +42,9 @@ function createCell(allPlayers, row, playerName) {
 
 function renderScoreTable(scoreSheet, container) {
     /* Creates a table for displying the scores for the whole game */
-    const keyPrefix = "round_";
     const allRounds = Object.keys(scoreSheet).sort((a, b) => {
-        const aIndex = Number(a.replace(keyPrefix, ""));
-        const bIndex = Number(b.replace(keyPrefix, ""));
+        const aIndex = Number(a.split("_")[1]);
+        const bIndex = Number(b.split("_")[1]);
         return aIndex - bIndex;
     });
 
