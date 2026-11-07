@@ -117,6 +117,7 @@ export async function addNewScore(userId, newScore) {
     await update(playerRef, {
         score: score
     });
+    return score;
 }
 
 /* Game */
@@ -139,7 +140,6 @@ export async function setupNewGame() {
         pot: 0,
         trump: '00',
         leadCard: '00',
-        scoreSheet: 0,
         dealer: dealer
     });
 }
@@ -225,21 +225,18 @@ export async function addCardToPot(card, userId) {
     }
 }
 
-export async function addRowToScoreCard(newScoreSheet) {
-    /* Adds a round of scores to the game scoreSheet */
+export async function addRowToScoreCard(roundInfo, newScoreSheet) {
+    /* Adds a round of scores to the game scoreSheet
+       The format is {round_X_Y: [{p1}, {p2}, {pN}]}
+       Where X is the index and Y is number of cards in the round
+    */
     const game = await getGame();
-    let sheet = game.scoreSheet;
+    let sheet = game.scoreSheet || {};
 
-    if (sheet === 0) {
-        await update(gameRef, {
-            scoreSheet: newScoreSheet
-        });
-    } else {
-        sheet.push(newScoreSheet);
-        await update(gameRef, {
-            scoreSheet: sheet
-        });
-    }
+    sheet[`round_${roundInfo}`] = newScoreSheet;
+    await update(gameRef, {
+        scoreSheet: sheet
+    });
 }
 
 export async function setTrickWinner(index) {

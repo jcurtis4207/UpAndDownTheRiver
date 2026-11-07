@@ -5,6 +5,11 @@ import { onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-data
 
 let allPlayers = []
 
+document.getElementById("score-button").addEventListener("click", () => {
+    /* Button click opens score page */
+    window.open("score.html", "_blank");
+});
+
 document.addEventListener('DOMContentLoaded', async function() {
     /* When the page loads, verify the game state and start play based on who is host */
     const game = await db.ensureGameStarted();
@@ -56,6 +61,14 @@ async function deal(count, leader) {
 function getPlayerId(leader, index) {
     /* Returns the Nth player after the leader */
     return allPlayers[(index + leader) % allPlayers.length];
+}
+
+async function clearHands() {
+    /* Clear the hand, bids, and tricks for each player */
+    for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
+        const currentPlayer = getPlayerId(0, playerIndex);
+        await db.newHand(currentPlayer);
+    }
 }
 
 async function makeBid(userId) {
@@ -185,7 +198,7 @@ async function findTrickWinner() {
     }
 }
 
-async function calculateScores() {
+async function calculateScores(roundIndex, round) {
     /* Sets the score for the round for each player, and adds a row to the game's score sheet
     Base score is 30
     If you win the same amount as you bid, you get an additional 10 for each trick
@@ -196,17 +209,23 @@ async function calculateScores() {
     let sheet = [];
     for (const playerId of allPlayers) {
         const player = await db.getPlayer(playerId);
-        let score = 3;
+        let roundScore = 3;
         if (player.bid !== player.tricks) {
-            score -= Math.abs(player.bid - player.tricks);
+            roundScore -= Math.abs(player.bid - player.tricks);
         } else {
-            score += player.bid;
+            roundScore += player.bid;
         }
-        score *= 10;
-        await db.addNewScore(player.id, score);
-        sheet.push({name: player.name, bid: player.bid, tricks: player.tricks, score: score});
+        roundScore *= 10;
+        const totalScore = await db.addNewScore(player.id, roundScore);
+        sheet.push({name: player.name,
+                    bid: player.bid,
+                    tricks: player.tricks,
+                    roundScore: roundScore,
+                    score: totalScore});
     }
-    await db.addRowToScoreCard(sheet);
+
+    const roundInfo = `${roundIndex}_${round}`;
+    await db.addRowToScoreCard(roundInfo, sheet);
 }
 
 async function findGameWinner() {
@@ -221,9 +240,10 @@ async function playActive(userId) {
     /* Main game loop for host user */
     const num_tricks = [7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7];
 
+    let roundIndex = 0;
     for (const round of num_tricks) {
-        await db.shuffle();
         let leader = await db.getDealer() + 1;   // leader starts to left of dealer
+        await clearHands();
         await deal(round, leader);
         ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
         await takeAllBids(leader, userId);
@@ -237,8 +257,9 @@ async function playActive(userId) {
             await db.newTrick();
         }
         // End of round
-        await calculateScores();
+        await calculateScores(roundIndex, round);
         await db.incrementDealer();
+        roundIndex++;
     }
     // End of game
     await findGameWinner();

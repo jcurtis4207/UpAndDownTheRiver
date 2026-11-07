@@ -64,3 +64,55 @@ html, body {
     display: flex;
     padding: 1rem;
 }
+
+/* Score Page */
+.score-table {
+  border-collapse: collapse;
+}
+
+.score-table th,
+.score-table td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+}
+
+.score-cell {
+  width: 110px;
+  height: 75px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  align-items: start;
+}
+
+.score-cell .bid {
+  justify-self: start;
+}
+
+.score-cell .tricks {
+  justify-self: end;
+}
+
+.score-cell .score {
+  grid-column: 1 / 3;
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.small {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.score-positive {
+  color: green;
+}
+
+.score-negative {
+  color: red;
+}
