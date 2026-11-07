@@ -32,6 +32,9 @@ function createCell(allPlayers, row, playerName) {
     } else if (roundScore < 30) {
         tricks.classList.add("score-negative");
     }
+    if (roundScore > 50 || roundScore < 10) {
+        tricks.classList.add("score-bold");
+    }
 
     scoreCell.append(bid, tricks, score);
     cell.append(scoreCell);

@@ -116,3 +116,7 @@ html, body {
 .score-negative {
   color: red;
 }
+
+.score-bold {
+    font-weight: bolder
+}
