@@ -20,7 +20,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 
-if (firebaseConfig.runInEumlator === true && firebaseConfig.emulatorHost) {
+if (firebaseConfig.runInEmulator === true && firebaseConfig.emulatorHost) {
     connectAuthEmulator(auth, `http://${firebaseConfig.emulatorHost}:9099`);
     connectDatabaseEmulator(db, firebaseConfig.emulatorHost, 9000);
 }

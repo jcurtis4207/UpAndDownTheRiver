@@ -63,9 +63,9 @@ Optionally the following keys can configure the firebase emulator for developmen
 
 ```json
 {
-    "runInEumlator": true,
+    "runInEmulator": true,
     "emulatorHost": "192.168.1.202"
 }
 ```
 
-When `runInEumlator` is `true` and `emulatorHost` is defined, the Auth and Database emulators will use the specified host for the emulator endpoints.
+When `runInEmulator` is `true` and `emulatorHost` is defined, the Auth and Database emulators will use the specified host for the emulator endpoints.
