@@ -42,6 +42,14 @@ Lastly I will mention sluffing. This is a very important concept, often overlook
 
 Conversely if you have bid but have yet to win enough tricks, if you have an situation where you can't follow suit or trump it, you would probably want to play a low card. This leaves your higher cards available if someone happens to lead that suit, giving you a chance to win.
 
+## Gameplay
+
+First the user is directed to a login page, where they must enter email and password to authenticate with the Firebase Authentication system. An optional username field will set the in-game name for the player. When undefined, it will use the username portion of the email.
+
+Then the user is directed to the lobby page, which will show the list of players currently in the lobby. The first player to login becomes the host. They will have a button to begin the game. Only 7 players can join the lobby, additional players will go to an error page.
+
+When the host starts the game, the database is initialized, the player order is randomized, and players are directed to the game page. At this point the host cannot disconnect. All of the game logic is run from the host's browser. Other users simply watch the game state change, and interact when they are prompted to bid or play a card. These users can leave and rejoin by logging in again. All players will see a button to display the score sheet in a new tab. The host will see a button to wipe the database for a fresh game.
+
 ## Game Configuration
 
 The firebase configuration is stored in `firebase-config.json`. It should have the structure:

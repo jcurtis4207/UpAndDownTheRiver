@@ -25,23 +25,25 @@ export async function getPlayer(userId) {
 export async function getAllPlayers() {
     /* Returns a list of all player objects */
     const players = await get(allPlayersRef);
-    return players.val();
+    const sortedEntries = Object.entries(players.val()).sort(([, a], [, b]) => a.position - b.position);
+    return Object.fromEntries(sortedEntries);
 }
 
 export async function getAllPlayerIds() {
     /* Returns a list of all player IDs */
-    const players = await get(allPlayersRef);
-    return Object.values(players.val()).map((player) => player.id);
+    const allPlayers = await getAllPlayers();
+    return Object.values(allPlayers).map(player => player.id);
 }
 
 export async function createPlayer(user, isHost) {
     /* Creates a new player in the database */
     const playerRef = getPlayerRef(user.uid);
-
+    const position = Math.floor(Math.random() * 1_000_000);
     await set(playerRef, {
         id: user.uid,
         isHost: isHost,
         name: user.displayName,
+        position: position,
         score: 0,
         bid: 0,
         hand: 0,
