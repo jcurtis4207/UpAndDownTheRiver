@@ -174,7 +174,7 @@ async function playTrick(leader, userId) {
 async function findTrickWinner() {
     /* Returns the ID of the winning player */
     const game = await db.getGame();
-    const cards = Object.keys(game.pot);
+    const cards = Object.values(game.pot).map(item => item.card);
     const trumpCards = [];
     const onSuitCards = [];
 
@@ -199,7 +199,7 @@ async function findTrickWinner() {
     }
 
     winningValue = winningValue.toString(16).toUpperCase();
-    const winningId = game.pot[`${winningValue}${winningSuit}`];
+    const winningId = Object.values(game.pot).find(player => player.card === `${winningValue}${winningSuit}`).userId;
     await db.incrementTricks(winningId);
 
     // Return index of winning player, they will lead the next trick

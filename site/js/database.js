@@ -211,24 +211,20 @@ export async function incrementDealer() {
 }
 
 export async function addCardToPot(card, userId) {
-    /* Adds the given card to the game pot and updates lead card
-       Stores in a dictionary as card:userId pairs
-       This allows finding the winning user */
+    /* Adds the given card to the game pot and updates lead card */
     const game = await getGame();
-    let newPot = game.pot;
+    const pot = game.pot || [];
+    const isLead = pot.length === 0;
 
-    if (game.pot === 0) {
-        newPot = { [card]: userId };
-        await update(gameRef, {
-            pot: newPot,
-            leadCard: card
-        });
-    } else {
-        newPot[card] = userId;
-        await update(gameRef, {
-            pot: newPot
-        });
+    const updates = {
+        pot: [...pot, { card, userId }]
+    };
+
+    if (isLead) {
+        updates.leadCard = card;
     }
+
+    await update(gameRef, updates);
 }
 
 export async function addRowToScoreCard(roundInfo, newScoreSheet) {

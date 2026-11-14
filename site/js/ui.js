@@ -183,12 +183,14 @@ function updateMessage(message) {
 }
 
 function updatePot(game, players) {
+    if (game.pot === 0) { return };
     const container = document.querySelector(".pot");
     let html = '';
-    for (const card in game.pot) {
-        const playerName = players[game.pot[card]].name;
-        html += `${getCard(card)}: ${playerName}<br>`
+    for (const item of game.pot) {
+        const playerName = players[item.userId].name;
+        html += `${getCard(item.card)}: ${playerName}<br>`
     }
+
     container.innerHTML = html;
 }
 
