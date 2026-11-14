@@ -25,10 +25,17 @@ async function main(user) {
     const gameState = await get(gameRef);
     const players = await get(allPlayersRef);
 
-    if (gameState.val().started ) {
-        window.location.href = "error.html?message=started";
+    if (gameState.val().started) {
+        // if user already in started game, redirect to game
+        const playerIds = Object.values(players.val()).map(player => player.id);
+        if (playerIds.includes(user.uid)) {
+            window.location.href = "game.html";
+        } else {
+            window.location.href = "error.html?message=started";
+        }
     }
-    if (players.val() && players.val().length > 6) {
+
+    if (players.val() && Object.keys(players.val()).length > 6) {
         window.location.href = "error.html?message=full";
     }
 
