@@ -8,21 +8,19 @@
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
         <link rel="manifest" href="/icons/site.webmanifest">
-        <link rel="preload" href="/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/styles.css"></noscript>
+        <link rel="preload" href="/css/game-style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/css/game-style.css"></noscript>
     </head>
     <body>
-        <div id="game-container">
-            <div class="all-players"></div>
-            <div class="active-suits"></div>
-            <div class="active-players"></div>
-            <div class="pot"></div>
-            <div class="input"></div>
-            <div class="inventory"></div>
-            <div class="message"></div>
-        </div>
-        <button type="button" id="cleanup-button" hidden>Delete Game</button>
-        <button type="button" id="score-button">View Score Sheet</button>
+        <div id="player-hand" class="hand"></div>
+        <div id="deck" class="deck"></div>
+        <div id="game-field" class="field"></div>
+        <div id="current-player" class="current-player"></div>
+        <div id="players-state" class="players-state"></div>
+        <div id="bid-area"></div>
+        <div id="winner-banner" hidden></div>
+        <button type="button" id="cleanup-button" class="form-button" hidden>Delete Game</button>
+        <button type="button" id="score-button" class="form-button">View Score Sheet</button>
         <script type="module" src="/js/app.js" defer></script>
     </body>
 </html>

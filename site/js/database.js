@@ -4,7 +4,7 @@ import { ref, set, get, update } from "https://www.gstatic.com/firebasejs/12.5.0
 
 const gameRef = ref(db, 'game');
 const allPlayersRef = ref(db, 'players');
-const suitOrder = { 's': 0, 'c': 1, 'd': 2, 'h': 3 };
+const suitOrder = { 's': 0, 'd': 1, 'c': 2, 'h': 3 };
 
 /* Player */
 export function getAllPlayersRef() {

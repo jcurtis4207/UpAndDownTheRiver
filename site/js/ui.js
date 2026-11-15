@@ -1,48 +1,22 @@
 export function updateUi(players, game, userId) {
-    updateInventory(players[userId]);
-    updateActiveSuits(game);
-    updatePot(game, players);
-    updateAllPlayers(players);
-    updateActivePlayers(players, game);
+    renderHand(players[userId]);
+    renderDeck(game, players);
+    renderGameField(game, players);
+    renderPlayersState(players);
+    renderCurrentPlayer(players);
 
-    if (game.leadCard == '00' && game.trickWinner) {
-        updateMessage(`${game.trickWinner} won the trick!`);
-    }
+    // if (game.leadCard == '00' && game.trickWinner) { //TODO
+    //     updateMessage(`${game.trickWinner} won the trick!`);
+    // }
 
     if (game.winners) {
         showWinner(game);
     }
 }
 
-function updateInventory(player) {
-    const container = document.querySelector(".inventory");
-    container.innerHTML = `
-    ${getHand(player)}&nbsp&nbsp&nbsp;
-    Score: ${player.score}&nbsp&nbsp&nbsp;
-    Bids: ${player.bid}&nbsp&nbsp&nbsp;
-    Tricks: ${player.tricks}&nbsp&nbsp&nbsp;`;
-}
-
-function getHand(player) {
-    let hand = [];
-    if (!Array.isArray(player?.hand)) {
-        return hand;
-    }
-    for (const c of player.hand) {
-        hand.push(getCard(c));
-    }
-    return hand;
-}
-
-function updateActiveSuits(game) {
-    const container = document.querySelector(".active-suits");
-    container.innerHTML = `
-    Trump: ${getCard(game.trump)}<br>
-    Lead: ${game.leadCard === '00' ? '' : getCard(game.leadCard)}`;
-}
-
 function getCard(card) {
-    if (card === undefined || card == 0) return;
+    /* Conver the card string into an object */
+    if (card === undefined || card == 0 || card === '00') return;
     const valueMap = {
         'A': '10',
         'B': 'J',
@@ -59,103 +33,218 @@ function getCard(card) {
 
     const value = valueMap[card[0]] || card[0];
     const suit = suitMap[card[1]];
-    return `${value}${suit}`;
+    const isRed = card[1] === "h" || card[1] === "d";
+    const color = (isRed) ? "red" : "black";
+    return { value: value, suit: suit, color: color };
 }
 
-export async function getUserBid() {
-    return new Promise((resolve) => {
-        const app = document.querySelector(".input");
-        let value = 0;
+function createCard(cardString, extraClass = "", elementType = "div") {
+    /* Generates an HTML element for a card */
+    const element = document.createElement(elementType);
+    const card = getCard(cardString);
+    if (!card) return;
+    element.className = `card ${extraClass}${card.color === "red" ? " red" : ""}`;
+    element.innerHTML = `
+        <span>${card.value}</span>
+        <span class="suit">${card.suit}</span>
+        `;
+    return element;
+}
 
-        const description = document.createElement('p');
-        description.innerHTML = `<h3>Bidding</h3>`;
+function renderHand(player) {
+    /* Display the player's hand at the bottom */
+    const isPlaying = player.playing;
+    const handElement = document.querySelector("#player-hand");
+    handElement.replaceChildren();
+    handElement.classList.toggle("is-active", isPlaying);
 
-        const bidLabel = document.createElement("span");
-        bidLabel.textContent = value;
-
-        const upBtn = document.createElement("button");
-        upBtn.textContent = "Up";
-        upBtn.onclick = () => {
-            if (value < 7) {
-                value++;
-                bidLabel.textContent = value;
-            }
-        };
-
-        const downBtn = document.createElement("button");
-        downBtn.textContent = "Down";
-        downBtn.onclick = () => {
-            if (value > 0) {
-                value--;
-                bidLabel.textContent = value;
-            }
-        };
-
-        const submitBtn = document.createElement("button");
-        submitBtn.textContent = "Submit";
-
-        app.appendChild(description);
-        app.appendChild(downBtn);
-        app.appendChild(bidLabel);
-        app.appendChild(upBtn);
-        app.appendChild(document.createElement("p"));
-        app.appendChild(submitBtn);
-
-        submitBtn.onclick = () => {
-            while (app.firstChild) {
-                app.removeChild(app.firstChild);
-            }
-            resolve(value);
-        };
+    const cards = player.hand;
+    if (!cards) return;
+    cards.forEach((cardString, index) => {
+        const cardButton = createCard(cardString, "", "button");
+        cardButton.type = "button";
+        cardButton.id = `card${index}`;
+        cardButton.disabled = !isPlaying;
+        handElement.appendChild(cardButton);
     });
 }
 
-export async function getUserPlay(player, game) {
+function renderDeck(game, players) {
+    /* Display the dealer, deck, trump, and lead card on the left */
+    const deckElement = document.querySelector("#deck");
+    deckElement.replaceChildren();
+
+    // A few visible card backs make the deck look like a stack.
+    for (let i = 3; i >= 1; i--) {
+        const back = document.createElement("div");
+        back.className = "card deck-back";
+        back.style.transform = `translate(${i * -2}px, ${i * 2}px)`;
+        deckElement.appendChild(back);
+    }
+
+    // The top card is face up.
+    const topCardElement = createCard(game.trump, "deck-top");
+    if (!topCardElement) return;
+    deckElement.appendChild(topCardElement);
+
+    // Lead card is below
+    if (game.leadCard != 0) {
+        const leadCardElement = createCard(game.leadCard, "lead-card");
+        deckElement.appendChild(leadCardElement);
+    }
+
+    // Show dealer name
+    const dealerIndex = game.dealer;
+    const playerNames = Object.values(players).map((player) => player.name);
+    const dealerName = playerNames[dealerIndex];
+    const dealerLabel = document.createElement("div");
+    dealerLabel.className = "dealer-name";
+    dealerLabel.textContent = `Dealer: ${dealerName}`;
+    deckElement.appendChild(dealerLabel);
+}
+
+function renderGameField(game, players) {
+    /* Display the active cards in the trick in the center */
+    const field = document.querySelector("#game-field");
+    field.replaceChildren();
+
+    const cards = game.pot;
+    if (!cards || cards === 0) return;
+    cards.forEach(card => {
+        const play = document.createElement("div");
+        play.className = "field-item";
+
+        play.appendChild(createCard(card.card));
+
+        const name = document.createElement("div");
+        name.className = "player-name";
+        const playerName = players[card.userId].name;
+        name.textContent = playerName;
+
+        play.appendChild(name);
+        field.appendChild(play);
+    });
+}
+
+function renderPlayersState(players) {
+    /* Display each player's info at the top */
+    const area = document.querySelector("#players-state");
+    area.replaceChildren();
+
+    Object.values(players).forEach(player => {
+        const block = document.createElement("div");
+        block.className = "player-block";
+
+        const name = document.createElement("div");
+        name.textContent = player.name;
+
+        const stats = document.createElement("div");
+        stats.className = "player-stats";
+        [
+            `Score: ${player.score}`,
+            `Bid: ${player.bid}`,
+            `Tricks: ${player.tricks}`
+        ].forEach(text => {
+            const line = document.createElement("div");
+            line.textContent = text;
+            stats.appendChild(line);
+        });
+
+        const cards = document.createElement("div");
+        cards.className = "remaining-cards";
+
+        // Offset each back to create an overlapping row.
+        if (player.hand && player.hand.length > 0) {
+            const cardWidth = 38;
+            const overlap = 16;
+            const rowWidth = cardWidth + Math.max(0, player.hand.length - 1) * overlap;
+            cards.style.width = `${rowWidth}px`;
+
+            for (let i = 0; i < player.hand.length; i++) {
+                const cardBack = document.createElement("div");
+                cardBack.className = "mini-card";
+                cardBack.style.left = `${i * overlap}px`;
+                cards.appendChild(cardBack);
+            }
+        }
+
+        block.append(name, stats, cards);
+        area.appendChild(block);
+    });
+}
+
+function renderCurrentPlayer(players) {
+    /* Display who is currently active and their state on the right */
+    let text = '';
+    for (const player of Object.values(players)) {
+        if (player.bidding) {
+            text = `${player.name} is Bidding`;
+            break;
+        }
+        if (player.playing) {
+            text = `${player.name} is Playing`;
+            break;
+        }
+    }
+
+    const status = document.querySelector("#current-player");
+    if (text) {
+        status.hidden = false;
+        status.textContent = text;
+    } else {
+        status.hidden = true;
+    }
+}
+
+function renderBidForm(maxBid, onSubmitBid) {
+    /* Display the form for entering the bid in the center */
+    const container = document.querySelector("#bid-area");
+    container.replaceChildren();
+
+    const form = document.createElement("form");
+    form.className = "bid-form";
+
+    const label = document.createElement("label");
+    label.textContent = "Your bid:";
+    label.htmlFor = "bid-input";
+
+    const input = document.createElement("input");
+    input.id = "bid-input";
+    input.type = "number";
+    input.value = "0";
+    input.min = "0";
+    input.max = String(maxBid);
+    input.step = "1";
+    input.required = true;
+
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.className = "form-button";
+    button.textContent = "Submit";
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const bid = input.valueAsNumber;
+        if (!Number.isInteger(bid) || bid < 0 || bid > maxBid) {
+            input.setCustomValidity(`Enter a whole number from 0 to ${maxBid}.`);
+            input.reportValidity();
+            return;
+        }
+
+        input.setCustomValidity("");
+        onSubmitBid(bid);
+        form.remove();
+    });
+
+    form.append(label, input, button);
+    container.appendChild(form);
+}
+
+export async function getUserBid(maxBid) {
+    /* Wait for and return user's bid */
     return new Promise((resolve) => {
-        const app = document.querySelector(".input");
-        let cardIndex = 0;
-
-        const description = document.createElement('p');
-        description.innerHTML = `<h3>Playing</h3>${player.name}`;
-
-        const cardLabel = document.createElement("span");
-        cardLabel.textContent = getCard(player.hand[cardIndex]);
-
-        const leftBtn = document.createElement("button");
-        leftBtn.textContent = "Left";
-        leftBtn.onclick = () => {
-            cardIndex = ((cardIndex - 1) % player.hand.length + player.hand.length) % player.hand.length;   // wtf JS?
-            cardLabel.textContent = getCard(player.hand[cardIndex]);
-        };
-
-        const rightBtn = document.createElement("button");
-        rightBtn.textContent = "Right";
-        rightBtn.onclick = () => {
-            cardIndex = (cardIndex + 1) % player.hand.length;
-            cardLabel.textContent = getCard(player.hand[cardIndex]);
-        };
-
-        const submitBtn = document.createElement("button");
-        submitBtn.textContent = "Submit";
-
-        app.appendChild(description);
-        app.appendChild(leftBtn);
-        app.appendChild(cardLabel);
-        app.appendChild(rightBtn);
-        app.appendChild(document.createElement("p"));
-        app.appendChild(submitBtn);
-
-        submitBtn.onclick = () => {
-            if (!validateCard(player, cardIndex, game.leadCard)) {
-                console.log("Cannot play this card, you must follow suit");
-                updateMessage("Must follow suit");
-                return;
-            }
-            while (app.firstChild) {
-                app.removeChild(app.firstChild);
-            }
-            resolve(cardIndex);
-        };
+        renderBidForm(maxBid, bid => { resolve(bid) });
     });
 }
 
@@ -174,72 +263,50 @@ function validateCard(player, cardIndex, lead) {
     }
 }
 
-function updateMessage(message) {
-    const container = document.querySelector(".message");
-    container.innerHTML = message;
-    setTimeout(() => {
-        container.innerHTML = '';
-    }, 4000);
-}
+export async function getUserPlay(player, game) {
+    /* Wait for and return user's card selection */
+    return new Promise(resolve => {
+        const handElement = document.querySelector("#player-hand");
+        const buttons = handElement.querySelectorAll('button[id^="card"]');
 
-function updatePot(game, players) {
-    if (game.pot === 0) { return };
-    const container = document.querySelector(".pot");
-    let html = '';
-    for (const item of game.pot) {
-        const playerName = players[item.userId].name;
-        html += `${getCard(item.card)}: ${playerName}<br>`
-    }
+        function onClick(event) {
+            const index = Number(event.currentTarget.id.slice(4));  //cardN
 
-    container.innerHTML = html;
-}
+            if (!validateCard(player, index, game.leadCard)) {
+                console.log("Must follow suit!");
+                // TODO: message
+                return;
+            }
 
-function updateAllPlayers(players) {
-    const container = document.querySelector(".all-players");
-    container.innerHTML = '';
+            // Remove the listeners so this wait ends after one selection.
+            buttons.forEach(button => button.removeEventListener("click", onClick));
+            resolve(index);
+        }
 
-    Object.values(players).forEach(player => {
-        const block = document.createElement('div');
-        block.innerHTML = `
-        <strong>${player.name}</strong><br>
-        Score: ${player.score}<br>
-        Bid: ${player.bid}<br>
-        Tricks: ${player.tricks}<br>`;
-        container.appendChild(block);
+        buttons.forEach(button => button.addEventListener("click", onClick));
     });
 }
 
 function showWinner(game) {
+    /* Display the winner(s) and their score in the center */
     const winners = game.winners;
-    const container = document.querySelector(".pot");
-    container.innerHTML = 'Game Over.<br>'
+
+    const container = document.querySelector("#winner-banner");
+    container.replaceChildren();
+    container.hidden = false;
+
+    const title = document.createElement("h1");
+    title.textContent = "Game Over!";
+
+    const winnerMessage = document.createElement("h3");
     if (winners.length === 1) {
-        container.innerHTML += `The winner is ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
+        winnerMessage.textContent = `The winner is ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
     } else {
-        container.innerHTML += `TIE! The winners are ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
-    }
-}
-
-function updateActivePlayers(players, game) {
-    const container = document.querySelector(".active-players");
-
-    const dealerIndex = game.dealer;
-    const playerNames = Object.values(players).map((player) => player.name);
-    const dealer = playerNames[dealerIndex];
-
-    let activePlayer = '';
-    for (const player of Object.values(players)) {
-        if (player.bidding) {
-            activePlayer = `Bidding: ${player.name}`;
-            break;
-        }
-        if (player.playing) {
-            activePlayer = `Playing: ${player.name}`;
-            break;
-        }
+        winnerMessage.textContent = `TIE! The winners are ${winners.map(w => w.name)} with a score of ${winners[0].score}`;
     }
 
-    container.innerHTML = `
-    Dealer: ${dealer}<br>
-    ${activePlayer}`;
+    const info = document.createElement("div");
+    info.textContent = "Click the score sheet button for the complete game scores.";
+
+    container.append(title, winnerMessage, info);
 }

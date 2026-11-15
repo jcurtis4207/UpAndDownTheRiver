@@ -31,6 +31,12 @@ function setupCleanupButton() {
     cleanupButton.hidden = false;
 
     cleanupButton.addEventListener("click", async () => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete the game? This can't be undone."
+        );
+
+        if (!confirmed) return;
+
         await db.clearDatabase();
     });
 }
@@ -82,9 +88,10 @@ async function clearHands() {
     }
 }
 
-async function makeBid(userId) {
+async function makeBid(userId, players) {
     /* Select a bid amount */
-    const newBid = await ui.getUserBid();
+    const maxBid = players[userId].hand.length;
+    const newBid = await ui.getUserBid(maxBid);
     await db.setPlayerBidding(userId, false);
     await db.setBid(userId, newBid);
 }
@@ -113,10 +120,11 @@ async function takeAllBids(leader, userId) {
     for (let playerIndex = 0; playerIndex < allPlayers.length; playerIndex++) {
         const currentPlayer = getPlayerId(leader, playerIndex);
         await db.setPlayerBidding(currentPlayer, true);
-        ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+        const allPlayers = await db.getAllPlayers();
+        ui.updateUi(allPlayers, await db.getGame(), userId);
 
         if (currentPlayer == userId) {
-            await makeBid(currentPlayer);
+            await makeBid(currentPlayer, allPlayers);
         } else {
             await waitForPlayerToBid(currentPlayer);
         }
@@ -132,8 +140,8 @@ async function playCard(userId) {
     const card = hand[cardIndex];
     hand.splice(cardIndex, 1);
 
-    await db.setPlayerPlaying(userId, false);
     await db.addCardToPot(card, userId);
+    await db.setPlayerPlaying(userId, false);
     await db.setHand(userId, hand);
 }
 
@@ -298,7 +306,7 @@ async function playPassive(userId) {
 
             const player = snapshot.val()[userId];
             if (player.bidding) {
-                await makeBid(userId);
+                await makeBid(userId, snapshot.val());
             } else if (player.playing) {
                 await playCard(userId);
             }

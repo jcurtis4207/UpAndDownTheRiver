@@ -1,0 +1,272 @@
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at center, transparent 35%, rgb(0 0 0 / 35%) 100%),
+    radial-gradient(ellipse at 30% 25%, #26734a 0%, transparent 65%),
+    linear-gradient(135deg, #155536, #0d422b);
+}
+
+.form-button {
+    padding: 10px 16px;
+    border: 1px solid #ffffff80;
+    border-radius: 8px;
+    background: #244b83;
+    color: white;
+    font: 600 14px sans-serif;
+    cursor: pointer;
+}
+
+#score-button {
+  position: fixed;
+  top: 16px;
+  right: 24px;
+}
+
+#cleanup-button {
+  position: fixed;
+  bottom: 16px;
+  left: 24px;
+}
+
+/* hand */
+.card {
+  width: 90px;
+  height: 130px;
+  box-sizing: border-box;
+  border: 1px solid #aaa;
+  border-radius: 9px;
+  box-shadow: 0 5px 8px #0004;
+  background: white;
+  color: #222;
+  font: 22px Georgia, serif;
+  display: grid;
+  place-items: center;
+}
+
+.card.red {
+  color: #c22;
+}
+
+.card .suit {
+  display: block;
+  text-align: center;
+  font-size: 38px;
+}
+
+.hand {
+  position: fixed;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.hand.is-active {
+  outline: 2px solid #ffd166;
+  outline-offset: 10px;
+  border-radius: 8px;
+  filter: drop-shadow(0 0 3px #ffd16699);
+}
+
+.hand .card {
+  padding: 8px;
+}
+
+.hand button.card:disabled {
+  cursor: default;
+}
+
+.hand button.card:not(:disabled) {
+  cursor: pointer;
+}
+
+.hand button.card:not(:disabled):hover {
+  transform: translateY(-10px);
+}
+
+/* deck */
+.deck {
+  position: fixed;
+  left: 2%;
+  top: 40%;
+  width: 90px;
+  height: 130px;
+  transform: translateY(-50%);
+}
+
+.deck .card {
+  position: absolute;
+  inset: 0;
+}
+
+.deck-back {
+  background: repeating-linear-gradient(
+    45deg,
+    #244b83,
+    #244b83 6px,
+    #fff 6px,
+    #fff 8px
+  );
+}
+
+.deck .lead-card {
+  top: calc(100% + 32px);
+  left: 50%;
+  width: 72px;
+  height: 104px;
+  transform: translateX(-55%);
+  display: grid;
+  place-items: center;
+}
+
+.lead-card .suit {
+  font-size: 30px;
+}
+
+.dealer-name {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  transform: translateX(-50%);
+  width: max-content;
+  color: white;
+  text-align: center;
+}
+
+/* field */
+.field {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.field-item .card {
+  display: grid;
+  place-items: center;
+  width: 110px;
+  height: 155px;
+  font: 28px Georgia, serif;
+}
+
+.player-name {
+  max-width: 100px;
+  color: white;
+  font: 14px sans-serif;
+  text-align: center;
+}
+
+/* status */
+.current-player {
+  position: fixed;
+  right: 2%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 150px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #ffffff20;
+  color: white;
+  font: 16px sans-serif;
+  text-align: center;
+}
+
+/* players */
+.players-state {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.player-block {
+  min-width: 130px;
+  color: white;
+  font: 14px sans-serif;
+  text-align: center;
+}
+
+.player-stats {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.remaining-cards {
+  position: relative;
+  height: 58px;
+  margin: 8px auto 0;
+}
+
+.mini-card {
+  position: absolute;
+  top: 0;
+  width: 38px;
+  height: 54px;
+  box-sizing: border-box;
+  border: 1px solid white;
+  border-radius: 5px;
+  background: repeating-linear-gradient(
+    45deg,
+    #244b83,
+    #244b83 3px,
+    #888 4px,
+    #888 5px
+  );
+}
+
+/* bidding */
+#bid-area {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bid-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #ffffff20;
+  color: white;
+  font: 16px sans-serif;
+}
+
+.bid-form input {
+  width: 60px;
+  padding: 8px;
+  font: inherit;
+}
+
+/* winners */
+#winner-banner {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  padding: 12px;
+  padding-bottom: 40px;
+  border-radius: 8px;
+  background: #ffffff20;
+  color: white;
+  font: 16px sans-serif;
+  text-align: center;
+}
