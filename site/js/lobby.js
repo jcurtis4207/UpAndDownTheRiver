@@ -65,6 +65,11 @@ async function initLobby(user) {
                 createdAt: Date.now(),
                 started: false
             });
+        } else {
+            // allow host to rejoin lobby
+            if (snapshot.val().host === user.uid) {
+                return true;
+            }
         }
     } catch (error) {
         console.error("Error accessing game data:", error);

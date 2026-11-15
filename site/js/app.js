@@ -90,7 +90,7 @@ async function clearHands() {
 
 async function makeBid(userId, players) {
     /* Select a bid amount */
-    const maxBid = players[userId].hand.length;
+    const maxBid = players[userId].hand.length || 7;
     const newBid = await ui.getUserBid(maxBid);
     await db.setPlayerBidding(userId, false);
     await db.setBid(userId, newBid);
