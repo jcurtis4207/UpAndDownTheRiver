@@ -2,12 +2,12 @@ export function updateUi(players, game, userId) {
     renderHand(players[userId]);
     renderDeck(game, players);
     renderGameField(game, players);
-    renderPlayersState(players);
+    renderPlayersState(players, userId);
     renderCurrentPlayer(players);
 
-    // if (game.leadCard == '00' && game.trickWinner) { //TODO
-    //     updateMessage(`${game.trickWinner} won the trick!`);
-    // }
+    if (game.trickWinner) {
+        updateMessage(`${game.trickWinner} won the trick!`);
+    }
 
     if (game.winners) {
         showWinner(game);
@@ -126,7 +126,7 @@ function renderGameField(game, players) {
     });
 }
 
-function renderPlayersState(players) {
+function renderPlayersState(players, userId) {
     /* Display each player's info at the top */
     const area = document.querySelector("#players-state");
     area.replaceChildren();
@@ -134,6 +134,9 @@ function renderPlayersState(players) {
     Object.values(players).forEach(player => {
         const block = document.createElement("div");
         block.className = "player-block";
+        if (player.id === userId) {
+            block.style.fontWeight = "bold";
+        }
 
         const name = document.createElement("div");
         name.textContent = player.name;
@@ -273,8 +276,7 @@ export async function getUserPlay(player, game) {
             const index = Number(event.currentTarget.id.slice(4));  //cardN
 
             if (!validateCard(player, index, game.leadCard)) {
-                console.log("Must follow suit!");
-                // TODO: message
+                updateMessage("You must follow suit!");
                 return;
             }
 
@@ -309,4 +311,30 @@ function showWinner(game) {
     info.textContent = "Click the score sheet button for the complete game scores.";
 
     container.append(title, winnerMessage, info);
+}
+
+function updateMessage(message) {
+    const timeout = 3500;
+    const container = document.querySelector("#message");
+    if (message) {
+        container.textContent = message;
+    } else {
+        container.textContent = '';
+        return;
+    }
+
+    // Clear an earlier timer if another message is shown quickly.
+    clearTimeout(container.fadeTimer);
+    clearTimeout(container.hideTimer);
+
+    container.classList.remove("fade-out");
+    container.classList.add("show");
+
+    container.fadeTimer = setTimeout(() => {
+        container.classList.add("fade-out");
+    }, timeout);
+
+    container.hideTimer = setTimeout(() => {
+        container.classList.remove("show", "fade-out");
+    }, timeout + 500);
 }

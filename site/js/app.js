@@ -256,6 +256,14 @@ async function findGameWinner() {
     await db.setWinners(winners);
 }
 
+async function updateTrickWinner(leader, userId) {
+    /* Update trick winner in database, and delay to keep message on screen */
+    await db.setTrickWinner(leader);
+    ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(4000);
+}
+
 async function playActive(userId) {
     /* Main game loop for host user */
     const num_tricks = [7, 6, 5, 4, 3, 2, 1, 2, 3, 4, 5, 6, 7];
@@ -272,7 +280,7 @@ async function playActive(userId) {
             await playTrick(leader, userId);
 
             leader = await findTrickWinner();    // (index of) winning player becomes new leader
-            await db.setTrickWinner(leader);
+            await updateTrickWinner(leader, userId);
             await db.newTrick();
         }
         // End of round
