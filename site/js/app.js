@@ -301,8 +301,7 @@ async function playPassive(userId) {
 
     onValue(allPlayersRef, (snapshot) => {
         void (async () => {
-            const allPlayers = snapshot.val();
-            ui.updateUi(allPlayers, await db.getGame(), userId);
+            ui.updateUi(await db.getAllPlayers(), await db.getGame(), userId);
 
             const player = snapshot.val()[userId];
             if (player.bidding) {
