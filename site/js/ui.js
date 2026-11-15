@@ -16,7 +16,7 @@ export function updateUi(players, game, userId) {
 
 function getCard(card) {
     /* Conver the card string into an object */
-    if (card === undefined || card == 0 || card === '00') return;
+    if (card === undefined || card == 0) return;
     const valueMap = {
         'A': '10',
         'B': 'J',
@@ -88,7 +88,7 @@ function renderDeck(game, players) {
     deckElement.appendChild(topCardElement);
 
     // Lead card is below
-    if (game.leadCard != 0) {
+    if (game.leadCard) {
         const leadCardElement = createCard(game.leadCard, "lead-card");
         deckElement.appendChild(leadCardElement);
     }
@@ -109,7 +109,7 @@ function renderGameField(game, players) {
     field.replaceChildren();
 
     const cards = game.pot;
-    if (!cards || cards === 0) return;
+    if (!cards) return;
     cards.forEach(card => {
         const play = document.createElement("div");
         play.className = "field-item";
@@ -250,7 +250,7 @@ export async function getUserBid(maxBid) {
 
 function validateCard(player, cardIndex, lead) {
     const card = player.hand[cardIndex];
-    if (lead[1] === card[1]) {
+    if (!lead || lead[1] === card[1]) {
         return true;
     }
 

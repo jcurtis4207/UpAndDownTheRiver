@@ -46,7 +46,6 @@ export async function createPlayer(user, isHost) {
         position: position,
         score: 0,
         bid: 0,
-        hand: 0,
         tricks: 0,
         bidding: false,
         playing: false
@@ -57,7 +56,7 @@ export async function newHand(userId) {
     /* Initializes a clean hand for a player */
     const playerRef = getPlayerRef(userId);
     await update(playerRef, {
-        hand: 0,
+        hand: null,
         bid: 0,
         tricks: 0
     });
@@ -137,15 +136,15 @@ export async function getGame() {
 }
 
 export async function setupNewGame() {
-    /* Initializes game fields with placeholders for a new game (created in lobby) */
+    /* Initializes fields for a new game (created in lobby) */
     const players = await getAllPlayerIds();
     const numPlayers = players.length;
     const dealer = Math.floor(Math.random() * numPlayers);
 
     await update(gameRef, {
-        pot: 0,
-        trump: '00',
-        leadCard: '00',
+        pot: null,
+        trump: null,
+        leadCard: null,
         dealer: dealer
     });
 }
@@ -153,8 +152,9 @@ export async function setupNewGame() {
 export async function newTrick() {
     /* Reset the pot and lead card for a new trick */
     await update(gameRef, {
-        pot: 0,
-        leadCard: '00'
+        pot: null,
+        leadCard: null,
+        trickWinner: null
     });
 }
 
