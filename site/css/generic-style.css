@@ -111,6 +111,10 @@ button:focus-visible {
   background: #282a36;
 }
 
+#cleanup {
+  width: min(100%, 200px);
+}
+
 .error-message {
   margin: 0 0 16px;
   padding: 10px 12px;

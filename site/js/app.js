@@ -1,3 +1,4 @@
+import * as cleanup from './cleanup.js';
 import * as db from './database.js';
 import * as ui from './ui.js';
 import { onValue } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
@@ -16,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const userId = await db.ensureUserInGame();
 
     if (game.host == userId) {
-        setupCleanupButton();
+        cleanup.setupCleanupButton();
         allPlayers = await db.getAllPlayerIds();
         await db.setupNewGame();
         await playActive(userId);
@@ -24,22 +25,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         await playPassive(userId);
     }
 });
-
-function setupCleanupButton() {
-    /* The host will have a visible button to cleanup the database */
-    const cleanupButton = document.getElementById("cleanup-button");
-    cleanupButton.hidden = false;
-
-    cleanupButton.addEventListener("click", async () => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete the game? This can't be undone."
-        );
-
-        if (!confirmed) return;
-
-        await db.clearDatabase();
-    });
-}
 
 function shuffle() {
     /* Returns a shuffled deck of cards as a list */

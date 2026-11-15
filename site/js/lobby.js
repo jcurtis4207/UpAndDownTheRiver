@@ -1,4 +1,5 @@
 import { auth, db } from './firebase.js'
+import * as cleanup from './cleanup.js';
 import * as obj from './database.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
@@ -44,6 +45,7 @@ async function main(user) {
     waitForStart();
 
     if (isHost) {
+        cleanup.setupCleanupButton();
         const startButton = document.getElementById('btnStart');
         startButton.style.display = 'block';
         startButton.addEventListener("click", startGame);
