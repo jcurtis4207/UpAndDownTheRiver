@@ -75,18 +75,22 @@ async function initLobby(user) {
 
 function waitForPlayers() {
     /* Display list of players in lobby, refreshes when users login */
-    const playersLabel = document.getElementById("lobbyPlayerList");
+    // const playersLabel = document.getElementById("lobbyPlayerList");
+    const playerList = document.querySelector(".player-list");
+
     onValue(allPlayersRef, (snapshot) => {
+        playerList.replaceChildren();
         const data = snapshot.val();
         if (!data) {
             return;
         }
-        let content = "";
         const players = Object.values(data).map(player => player.name);
         for (const player of players) {
-            content += (`${player}<br>`);
+            const item = document.createElement("li");
+            item.className = "player-item";
+            item.textContent = player;
+            playerList.append(item);
         }
-        playersLabel.innerHTML = content;
     });
 }
 

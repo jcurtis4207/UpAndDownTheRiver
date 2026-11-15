@@ -8,30 +8,29 @@
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
         <link rel="manifest" href="/icons/site.webmanifest">
-        <link rel="preload" href="/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <noscript><link rel="stylesheet" href="/styles.css"></noscript>
+        <link rel="preload" href="/css/generic-style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="/css/generic-style.css"></noscript>
     </head>
     <body>
         <div id="login">
             <div class="header">
-                <h1>Login</h1>
+                <h1>Up and Down the River</h1>
+                <h2>Login</h2>
             </div>
             <form>
                 <div class="group">
-                    <input id="txtEmail" type="email">
                     <label>Email</label>
+                    <input id="txtEmail" type="email">
                 </div>
                 <div class="group">
-                    <input id="txtPassword" type="password">
                     <label>Password</label>
+                    <input id="txtPassword" type="password">
                 </div>
                 <div class="group">
-                    <input id="txtUsername" type="text">
                     <label>Username</label>
+                    <input id="txtUsername" type="text">
                 </div>
-                <div id="loginError" class="group">
-                    <div id="loginErrorLabel" style="display: none;">Error message</div>
-                </div>
+                <p id="login-error" class="error-message" role="alert" hidden></p>
                 <button id="btnLogin" type="button">Log in</button>
             </form>
         </div>

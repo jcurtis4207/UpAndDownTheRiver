@@ -4,11 +4,12 @@ import { signInWithEmailAndPassword, AuthErrorCodes, setPersistence, browserSess
 const btnLogin = document.getElementById("btnLogin");
 const emailField = document.getElementById("txtEmail");
 const passwordField = document.getElementById("txtPassword");
-const errorLabel = document.getElementById("loginErrorLabel");
+const errorLabel = document.getElementById("login-error");
 
 const loginEmailPassword = async () => {
     /* On successful login redirect to lobby */
     try {
+        errorLabel.hidden = true;
         await setPersistence(auth, browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, emailField.value, passwordField.value);
 
@@ -31,7 +32,7 @@ const loginEmailPassword = async () => {
 
 function showLoginError(error) {
     /* Show error message on HTML page */
-    errorLabel.style.display = 'block';
+    errorLabel.hidden = false;
     if (error.code == AuthErrorCodes.INVALID_PASSWORD) {
         errorLabel.innerHTML = `Wrong password. Try again.`
     }

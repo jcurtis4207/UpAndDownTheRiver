@@ -1,0 +1,121 @@
+* {
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 2.8rem;
+  color: #f8f8f2;
+}
+
+h2 {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 1.8rem;
+  color: #f8f8f2;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  font-family: system-ui, sans-serif;
+  color: #f8f8f2;
+  background: #282a36;
+}
+
+form {
+  padding: 32px;
+  border: 1px solid #44475a;
+  border-radius: 16px;
+  background: #343746;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 30%);
+}
+
+input {
+  width: 100%;
+  margin: 8px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #6272a4;
+  border-radius: 8px;
+  outline: none;
+  background: #282a36;
+  color: #f8f8f2;
+  font: inherit;
+}
+
+input::placeholder {
+  color: #a6a8b5;
+}
+
+input:focus {
+  border-color: #bd93f9;
+  box-shadow: 0 0 0 3px rgb(189 147 249 / 20%);
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #bd93f9;
+  color: #282a36;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+button:hover {
+  background: #caa9fa;
+}
+
+button:focus-visible {
+  outline: 3px solid #8be9fd;
+  outline-offset: 3px;
+}
+
+#lobby {
+  width: min(100%, 480px);
+  min-height: 500px;
+  margin: 48px auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #44475a;
+  border-radius: 16px;
+  background: #343746;
+  color: #f8f8f2;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 30%);
+}
+
+.player-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  margin-bottom: 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid #44475a;
+  border-radius: 8px;
+  background: #282a36;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid #ff5555;
+  border-radius: 8px;
+  background: rgb(255 85 85 / 10%);
+  color: #ff8a8a;
+}
