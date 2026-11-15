@@ -91,7 +91,7 @@ body {
 .deck {
   position: fixed;
   left: 2%;
-  top: 40%;
+  top: 48%;
   width: 90px;
   height: 130px;
   transform: translateY(-50%);
@@ -110,20 +110,6 @@ body {
     #fff 6px,
     #fff 8px
   );
-}
-
-.deck .lead-card {
-  top: calc(100% + 32px);
-  left: 50%;
-  width: 72px;
-  height: 104px;
-  transform: translateX(-55%);
-  display: grid;
-  place-items: center;
-}
-
-.lead-card .suit {
-  font-size: 30px;
 }
 
 .dealer-name {
@@ -160,6 +146,10 @@ body {
   width: 110px;
   height: 155px;
   font: 28px Georgia, serif;
+}
+
+.highlighted {
+  box-shadow: 0 0 12px blue;
 }
 
 .player-name {

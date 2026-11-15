@@ -14,7 +14,7 @@ export function updateUi(players, game, userId) {
     }
 }
 
-function getCard(card) {
+function convertCardString(card) {
     /* Conver the card string into an object */
     if (card === undefined || card == 0) return;
     const valueMap = {
@@ -41,7 +41,7 @@ function getCard(card) {
 function createCard(cardString, extraClass = "", elementType = "div") {
     /* Generates an HTML element for a card */
     const element = document.createElement(elementType);
-    const card = getCard(cardString);
+    const card = convertCardString(cardString);
     if (!card) return;
     element.className = `card ${extraClass}${card.color === "red" ? " red" : ""}`;
     element.innerHTML = `
@@ -87,12 +87,6 @@ function renderDeck(game, players) {
     if (!topCardElement) return;
     deckElement.appendChild(topCardElement);
 
-    // Lead card is below
-    if (game.leadCard) {
-        const leadCardElement = createCard(game.leadCard, "lead-card");
-        deckElement.appendChild(leadCardElement);
-    }
-
     // Show dealer name
     const dealerIndex = game.dealer;
     const playerNames = Object.values(players).map((player) => player.name);
@@ -110,11 +104,17 @@ function renderGameField(game, players) {
 
     const cards = game.pot;
     if (!cards) return;
-    cards.forEach(card => {
+    cards.forEach((card, index) => {
         const play = document.createElement("div");
         play.className = "field-item";
+        const cardElement = createCard(card.card)
 
-        play.appendChild(createCard(card.card));
+        // highlight lead card
+        if (index === 0) {
+            cardElement.classList.add("highlighted");
+        }
+
+        play.appendChild(cardElement);
 
         const name = document.createElement("div");
         name.className = "player-name";
