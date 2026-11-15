@@ -2,6 +2,8 @@
 
 A webapp for playing the card game "Up and Down the River"
 
+![Screenshot of game](screenshot.png)
+
 ## Game Rules
 
 The gameplay is similar to spades, but there are differences that make it unique.
